@@ -1,63 +1,97 @@
-console.log("Sidebar control script v2.1 (Persistent Observer) loaded!");
+console.log("Sidebar control script v2.2 (Aggressive CSS Override) loaded!");
 
-// Создаем наблюдателя, но пока не активируем его.
-// Он будет следить за изменениями атрибута 'style' у элемента.
+// Инжектим мощный CSS для принудительного скрытия
+const aggressiveCSS = `
+  /* Принудительно скрываем сайдбар */
+  .sidebar-hidden .main-sidebar {
+    display: none !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    position: absolute !important;
+    left: -9999px !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+  }
+
+  /* КРИТИЧНО: Убираем ВСЕ возможные отступы */
+  .sidebar-hidden .content-wrapper,
+  .sidebar-hidden .main-header,
+  .sidebar-hidden .main-footer {
+    margin-left: 0 !important;
+  }
+
+  /* Убираем все transitions чтобы избежать артефактов */
+  .sidebar-hidden .content-wrapper,
+  .sidebar-hidden .main-header,
+  .sidebar-hidden .main-footer {
+    transition: none !important;
+  }
+`;
+
+// Добавляем стили
+const styleSheet = document.createElement("style");
+styleSheet.innerText = aggressiveCSS;
+document.head.appendChild(styleSheet);
+
 let observer = new MutationObserver((mutations) => {
-  mutations.forEach((mutation) => {
-    // Если изменился атрибут 'style'...
-    if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
-      const targetElement = mutation.target;
-      // ...и отступ слева не равен '0px', мы принудительно возвращаем его к нулю.
-      if (targetElement.style.marginLeft !== '0px') {
-        targetElement.style.marginLeft = '0px';
-        console.log(`Forcefully reset marginLeft for ${targetElement.className}`);
+  // Проверяем только если сайдбар скрыт
+  if (document.body.classList.contains('sidebar-hidden')) {
+    mutations.forEach((mutation) => {
+      if (mutation.type === 'attributes') {
+        const target = mutation.target;
+        if (target.matches('.content-wrapper, .main-header, .main-footer')) {
+          if (target.style.marginLeft !== '0px') {
+            target.style.marginLeft = '0px';
+          }
+        }
       }
-    }
-  });
+    });
+  }
 });
 
-// Настройки для наблюдателя: следить только за атрибутами.
-const observerConfig = { attributes: true };
+const observerConfig = {
+  attributes: true,
+  subtree: true,
+  attributeFilter: ['style']
+};
+
+function forceRemoveMargins() {
+  const elements = document.querySelectorAll('.content-wrapper, .main-header, .main-footer');
+  elements.forEach(el => {
+    if (el.style.marginLeft !== '0px') {
+      el.style.setProperty('margin-left', '0px', 'important');
+    }
+  });
+}
 
 function toggleSidebar() {
   const sidebar = document.querySelector('.main-sidebar');
-  const content = document.querySelector('.content-wrapper');
-  const header = document.querySelector('.main-header');
-
-  if (!sidebar || !content || !header) {
-    console.error("Critical page element not found.");
-    return "Error: Critical element not found.";
+  if (!sidebar) {
+    console.error("Sidebar element not found.");
+    return "Error: Sidebar not found.";
   }
 
-  // Проверяем, видим ли мы сайдбар.
-  if (sidebar.style.display !== 'none') {
-    // --- СКРЫВАЕМ САЙДБАР И АКТИВИРУЕМ ОХРАНУ ---
-    console.log("Hiding sidebar and activating observer...");
-    sidebar.style.display = 'none';
-    content.style.marginLeft = '0px';
-    header.style.marginLeft = '0px';
-
-    // Начинаем наблюдение за контентом и хедером.
-    observer.observe(content, observerConfig);
-    observer.observe(header, observerConfig);
-
+  if (!document.body.classList.contains('sidebar-hidden')) {
+    // --- СКРЫВАЕМ САЙДБАР ---
+    console.log("Hiding sidebar with aggressive approach...");
+    document.body.classList.add('sidebar-hidden');
+    forceRemoveMargins();
+    observer.observe(document.body, observerConfig);
     return "hidden";
   } else {
-    // --- ПОКАЗЫВАЕМ САЙДБАР И ОТКЛЮЧАЕМ ОХРАНУ ---
-    console.log("Showing sidebar and disconnecting observer...");
-    // Сначала отключаем наблюдателя, чтобы он не мешал.
+    // --- ПОКАЗЫВАЕМ САЙДБАР ---
+    console.log("Showing sidebar...");
     observer.disconnect();
-
-    // Затем возвращаем стили к исходному состоянию.
-    sidebar.style.display = '';
-    content.style.marginLeft = '';
-    header.style.marginLeft = '';
-
+    document.body.classList.remove('sidebar-hidden');
+    const elements = document.querySelectorAll('.content-wrapper, .main-header, .main-footer');
+    elements.forEach(el => {
+      el.style.removeProperty('margin-left');
+    });
     return "visible";
   }
 }
 
-// Слушаем сообщения от popup.
+// Слушаем сообщения от popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "toggle_sidebar") {
     const currentState = toggleSidebar();
