@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Помощник для Опросника",
-  "version": "1.1",
-  "description": "Управляет отображением сайдбара на странице опросника.",
+  "name": "Page Helper",
+  "version": "1.2",
+  "description": "A simple extension to control page elements.",
   "permissions": [
     "activeTab",
     "scripting"
