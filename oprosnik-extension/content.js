@@ -1,15 +1,21 @@
-console.log("Sidebar control script v2.3 loaded!");
+console.log("Sidebar control script v2.5 loaded!");
 
 // --- Логика для сайдбара (остается без изменений) ---
 const aggressiveCSS = `
+  /* Принудительно скрываем сайдбар */
   .sidebar-hidden .main-sidebar {
     display: none !important;
+    width: 0 !important;
   }
+
+  /* КРИТИЧНО: Убираем отступ слева у всех основных контейнеров */
   .sidebar-hidden .content-wrapper,
   .sidebar-hidden .main-header,
   .sidebar-hidden .main-footer {
     margin-left: 0 !important;
   }
+
+  /* Убираем все transitions чтобы избежать визуальных артефактов */
   .sidebar-hidden .content-wrapper,
   .sidebar-hidden .main-header,
   .sidebar-hidden .main-footer {
@@ -27,39 +33,54 @@ function toggleSidebar() {
   return isHidden ? 'hidden' : 'visible';
 }
 
-// --- НОВАЯ ЛОГИКА: Скрытие элемента формы ---
+// --- Логика для скрытия элементов формы ---
 
 /**
  * Находит и скрывает контейнер элемента "Длительность звонка".
- * Это делается путем установки style.display = 'none', что скрывает
- * элемент, но оставляет его в DOM для валидации сервером.
  */
 function hideCallDurationElement() {
-  // 1. Находим выпадающий список по его уникальному ID.
   const callDurationSelect = document.getElementById('call_duration_id');
-
   if (callDurationSelect) {
-    // 2. Находим его ближайший родительский элемент с классом 'row'.
-    // Это и есть контейнер, который нужно скрыть.
     const callDurationContainer = callDurationSelect.closest('.row');
-
     if (callDurationContainer) {
-      // 3. Скрываем контейнер.
       callDurationContainer.style.display = 'none';
       console.log('Элемент "Длительность звонка" был успешно скрыт.');
-    } else {
-      console.error('Не удалось найти родительский контейнер для элемента "Длительность звонка".');
     }
   } else {
-    // Это сообщение появится, если элемент не будет найден на странице.
     console.log('Элемент "Длительность звонка" не найден на этой странице.');
   }
 }
 
+/**
+ * НОВАЯ ФУНКЦИЯ
+ * Находит и удаляет конкретный элемент <option> из выпадающего списка.
+ */
+function removeSpecificOption() {
+  // 1. Находим родительский select по ID.
+  const typeGroupSelect = document.getElementById('type_group');
+
+  if (typeGroupSelect) {
+    // 2. Используем CSS-селектор для поиска нужного option по его атрибуту value.
+    const optionToRemove = typeGroupSelect.querySelector('option[value="КДГ 1 ЛТП"]');
+
+    if (optionToRemove) {
+      // 3. Удаляем найденный элемент.
+      optionToRemove.remove();
+      console.log('Элемент <option> со значением "КДГ 1 ЛТП" был успешно удален.');
+    } else {
+      console.log('Элемент <option> со значением "КДГ 1 ЛТП" не найден.');
+    }
+  } else {
+    console.error('Выпадающий список с id="type_group" не найден.');
+  }
+}
+
+
 // --- Обработчики сообщений и вызовы функций ---
 
-// Вызываем новую функцию для скрытия элемента сразу после загрузки скрипта.
+// Вызываем функции для модификации формы сразу после загрузки скрипта.
 hideCallDurationElement();
+removeSpecificOption();
 
 // Слушаем сообщения от popup для управления сайдбаром.
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
