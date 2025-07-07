@@ -1,4 +1,4 @@
-console.log("Sidebar control script v2.5 loaded!");
+console.log("Sidebar control script v2.6 loaded!");
 
 // --- Логика для сайдбара (остается без изменений) ---
 const aggressiveCSS = `
@@ -33,7 +33,7 @@ function toggleSidebar() {
   return isHidden ? 'hidden' : 'visible';
 }
 
-// --- Логика для скрытия элементов формы ---
+// --- Логика для скрытия и модификации элементов формы ---
 
 /**
  * Находит и скрывает контейнер элемента "Длительность звонка".
@@ -52,26 +52,37 @@ function hideCallDurationElement() {
 }
 
 /**
- * НОВАЯ ФУНКЦИЯ
- * Находит и удаляет конкретный элемент <option> из выпадающего списка.
+ * НОВАЯ УНИВЕРСАЛЬНАЯ ФУНКЦИЯ
+ * Находит и удаляет несколько элементов <option> из разных выпадающих списков.
+ * @param {object} selectors - Объект, где ключ - это ID селектора,
+ * а значение - массив 'value' опций для удаления.
  */
-function removeSpecificOption() {
-  // 1. Находим родительский select по ID.
-  const typeGroupSelect = document.getElementById('type_group');
+function removeSpecificOptions(selectors) {
+  // Перебираем все селекторы (ключи) в переданном объекте
+  for (const selectId in selectors) {
+    // Проверяем, что это действительно свойство объекта, а не из прототипа
+    if (Object.prototype.hasOwnProperty.call(selectors, selectId)) {
+      const selectElement = document.getElementById(selectId);
 
-  if (typeGroupSelect) {
-    // 2. Используем CSS-селектор для поиска нужного option по его атрибуту value.
-    const optionToRemove = typeGroupSelect.querySelector('option[value="КДГ 1 ЛТП"]');
+      if (selectElement) {
+        // Получаем массив значений для удаления для текущего селектора
+        const valuesToRemove = selectors[selectId];
 
-    if (optionToRemove) {
-      // 3. Удаляем найденный элемент.
-      optionToRemove.remove();
-      console.log('Элемент <option> со значением "КДГ 1 ЛТП" был успешно удален.');
-    } else {
-      console.log('Элемент <option> со значением "КДГ 1 ЛТП" не найден.');
+        // Перебираем все значения, которые нужно удалить
+        valuesToRemove.forEach(value => {
+          // Ищем option с точным совпадением атрибута value
+          const optionToRemove = selectElement.querySelector(`option[value="${value}"]`);
+          if (optionToRemove) {
+            optionToRemove.remove();
+            console.log(`Элемент <option> с value="${value}" удален из select#${selectId}.`);
+          } else {
+            console.log(`Элемент <option> с value="${value}" не найден в select#${selectId}.`);
+          }
+        });
+      } else {
+        console.error(`Выпадающий список с id="${selectId}" не найден.`);
+      }
     }
-  } else {
-    console.error('Выпадающий список с id="type_group" не найден.');
   }
 }
 
@@ -80,7 +91,15 @@ function removeSpecificOption() {
 
 // Вызываем функции для модификации формы сразу после загрузки скрипта.
 hideCallDurationElement();
-removeSpecificOption();
+
+// Определяем, какие опции и из каких селекторов нужно удалить.
+const optionsToRemove = {
+  'type_group': ['КДГ 1 ЛТП'], // Удаляем "КДГ 1 ЛТП" из #type_group
+  'type_id': ['42','400','0']  // Удаляем "Не определен" из #mrf_id
+};
+// Вызываем новую универсальную функцию
+removeSpecificOptions(optionsToRemove);
+
 
 // Слушаем сообщения от popup для управления сайдбаром.
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
