@@ -1,49 +1,63 @@
-console.log("Sidebar control script v2.0 (Direct Style Manipulation) loaded!");
+console.log("Sidebar control script v2.1 (Persistent Observer) loaded!");
 
-/**
- * This is the most direct approach. We will use JavaScript to set
- * inline styles directly on the elements. Inline styles have the highest
- * priority and will override any styles from the page's own stylesheets or scripts.
- */
+// Создаем наблюдателя, но пока не активируем его.
+// Он будет следить за изменениями атрибута 'style' у элемента.
+let observer = new MutationObserver((mutations) => {
+  mutations.forEach((mutation) => {
+    // Если изменился атрибут 'style'...
+    if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+      const targetElement = mutation.target;
+      // ...и отступ слева не равен '0px', мы принудительно возвращаем его к нулю.
+      if (targetElement.style.marginLeft !== '0px') {
+        targetElement.style.marginLeft = '0px';
+        console.log(`Forcefully reset marginLeft for ${targetElement.className}`);
+      }
+    }
+  });
+});
+
+// Настройки для наблюдателя: следить только за атрибутами.
+const observerConfig = { attributes: true };
+
 function toggleSidebar() {
   const sidebar = document.querySelector('.main-sidebar');
   const content = document.querySelector('.content-wrapper');
   const header = document.querySelector('.main-header');
 
   if (!sidebar || !content || !header) {
-    console.error("Critical page element not found. Aborting.");
-    return "Error: A critical element was not found.";
+    console.error("Critical page element not found.");
+    return "Error: Critical element not found.";
   }
 
-  // Проверяем, видим ли мы сайдбар
+  // Проверяем, видим ли мы сайдбар.
   if (sidebar.style.display !== 'none') {
-    // --- СКРЫВАЕМ САЙДБАР ---
-    // 1. Прячем сайдбар
+    // --- СКРЫВАЕМ САЙДБАР И АКТИВИРУЕМ ОХРАНУ ---
+    console.log("Hiding sidebar and activating observer...");
     sidebar.style.display = 'none';
-
-    // 2. Убираем отступ слева у контента и хедера
     content.style.marginLeft = '0px';
     header.style.marginLeft = '0px';
 
-    console.log("Sidebar hidden via direct style manipulation.");
+    // Начинаем наблюдение за контентом и хедером.
+    observer.observe(content, observerConfig);
+    observer.observe(header, observerConfig);
+
     return "hidden";
-
   } else {
-    // --- ПОКАЗЫВАЕМ САЙДБАР ---
-    // 1. Показываем сайдбар
-    sidebar.style.display = ''; // Убираем инлайн стиль, возвращая к дефолту
+    // --- ПОКАЗЫВАЕМ САЙДБАР И ОТКЛЮЧАЕМ ОХРАНУ ---
+    console.log("Showing sidebar and disconnecting observer...");
+    // Сначала отключаем наблюдателя, чтобы он не мешал.
+    observer.disconnect();
 
-    // 2. Убираем наши инлайн стили отступов, позволяя скриптам страницы
-    // вернуть все как было.
+    // Затем возвращаем стили к исходному состоянию.
+    sidebar.style.display = '';
     content.style.marginLeft = '';
     header.style.marginLeft = '';
 
-    console.log("Sidebar restored to its default state.");
     return "visible";
   }
 }
 
-// Слушаем сообщения от popup
+// Слушаем сообщения от popup.
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "toggle_sidebar") {
     const currentState = toggleSidebar();
