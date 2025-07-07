@@ -1,34 +1,41 @@
-console.log("Sidebar control script v1.6 (Correct approach) loaded!");
+console.log("Sidebar control script v1.8 (User CSS + Simplified JS) loaded!");
+
+// 1. Используем ваш подробный и мощный CSS.
+const customCSS = `
+  /* Когда на body есть класс sidebar-collapse, применяем эти стили */
+  .sidebar-collapse .main-sidebar {
+    display: none !important;
+  }
+
+  .sidebar-collapse .content-wrapper,
+  .sidebar-collapse .main-footer,
+  .sidebar-collapse .main-header {
+    margin-left: 0 !important;
+  }
+`;
+
+// 2. Внедряем эти стили на страницу.
+const styleSheet = document.createElement("style");
+styleSheet.innerText = customCSS;
+document.head.appendChild(styleSheet);
 
 /**
- * This function finds the page's own sidebar toggle button
- * and simulates a click on it. This is the most reliable method
- * as it uses the page's built-in JavaScript to correctly
- * handle all layout changes.
+ * 3. Самая простая и надежная функция переключения.
+ * Она просто добавляет/убирает класс, а CSS выше делает всю работу.
  */
 function toggleSidebar() {
-  // Find the button by its unique attribute: 'data-widget="pushmenu"'
-  const sidebarButton = document.querySelector('a[data-widget="pushmenu"]');
-
-  if (sidebarButton) {
-    // Simulate a user click
-    sidebarButton.click();
-    console.log("Successfully triggered the page's own sidebar script.");
-    return "Toggle command sent successfully.";
-  } else {
-    // This message will appear if the button isn't found
-    console.error("Error: Could not find the sidebar toggle button.");
-    return "Error: Sidebar button not found on the page.";
-  }
+  document.body.classList.toggle('sidebar-collapse');
+  
+  const isHidden = document.body.classList.contains('sidebar-collapse');
+  console.log(`Toggled class. Sidebar is now ${isHidden ? 'hidden' : 'visible'}.`);
+  return isHidden ? 'hidden' : 'visible';
 }
 
-// Listen for the message from the popup to run our function
+// 4. Слушаем сообщения от popup.
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "toggle_sidebar") {
-    const status = toggleSidebar();
-    // Send a response back to the popup
-    sendResponse({ status: status });
+    const currentState = toggleSidebar();
+    sendResponse({ status: `Sidebar is now ${currentState}` });
   }
-  // Return true to indicate you wish to send a response asynchronously
-  return true;
+  return true; // Для асинхронного ответа.
 });
