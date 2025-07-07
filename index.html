@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Опросник ТПИ</title>
+	<link rel="icon" type="image/png" href="https://ctp.rt.ru/assets/favicon.png">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+	<script src="https://ctp.rt.ru/assets/adminlte/plugins/jquery/jquery.min.js"></script>
+	<link rel="stylesheet" href="https://ctp.rt.ru/assets/adminlte/css/adminlte.min.css">
+	<script src="https://ctp.rt.ru/assets/adminlte/js/adminlte.min.js"></script>
+	<link rel="stylesheet" href="https://ctp.rt.ru/assets/adminlte/plugins/fontawesome-free/css/all.min.css">
+	<script src="https://ctp.rt.ru/assets/adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+	<link rel="stylesheet" href="https://ctp.rt.ru/assets/adminlte/plugins/select2/css/select2.min.css">
+	<link rel="stylesheet" href="https://ctp.rt.ru/assets/adminlte/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
+	<script src="https://ctp.rt.ru/assets/adminlte/plugins/select2/js/select2.full.min.js"></script>	<style>
+		.text-sm {font-size:.875rem;}
+	</style>
+</head>
+<body class="hold-transition sidebar-mini sidebar-collapse">
+<!-- .wrapper -->
+<div class="wrapper">
+<!-- .navbar -->
+<nav class="main-header navbar navbar-expand navbar-white navbar-light">
+	<!-- Left navbar links -->
+	<ul class="navbar-nav">
+		<li class="nav-item"><a class="nav-link" data-widget="pushmenu" href="#"><i class="fas fa-bars"></i></a></li>
+		<li class="nav-item d-none d-sm-inline-block">
+			<a href="https://ctp.rt.ru/" class="nav-link">Профиль сотрудника</a>
+		</li>
+	</ul>
+	<!-- Right navbar links -->
+	<ul class="nav navbar-nav ml-auto">
+		<li class="dropdown user user-menu open">
+            <a href="#" class="nav-link" data-toggle="dropdown" aria-expanded="false">
+              <span class="hidden-xs">konstantin.tkachenko@rt.ru</span>
+            </a>
+                      </li>		
+		<li class="nav-item">
+			<a href="https://ctp.rt.ru/auth/logout" class="nav-link"><i class="nav-icon fas fa-sign-out-alt"></i></a>		</li>
+	</ul>
+</nav>
+<!-- /.navbar -->
+<!-- .sidebar -->
+<aside class="main-sidebar sidebar-dark-primary elevation-4">
+	<!-- Brand Logo -->
+	<a href="#" class="brand-link">
+		<img src="https://ctp.rt.ru//assets/favicon.png" alt="" class="brand-image img-circle elevation-3" style="opacity: .8">
+		<span class="brand-text font-weight-light">Профиль сотрудника</span>
+	</a>
+	<div class="sidebar">
+		<!-- Sidebar Menu -->
+		<nav class="mt-2">
+			<ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+				<li class="nav-item">
+					<a href="https://ctp.rt.ru/" class="nav-link "><i class="nav-icon fas fa-th"></i><p>Главная</p></a>
+				</li>
+				<li class="nav-item">
+					<a href="https://ctp.rt.ru/repeates" class="nav-link "><i class="nav-icon fas fa-copy"></i><p>Повторы</p></a>
+				</li><li class="nav-item">
+					<a href="https://ctp.rt.ru/arm"class="nav-link "><i class="nav-icon fas fa-wave-square"></i><p>АРМ</p></a>
+					</li><li class="nav-item">
+					<a href="https://ctp.rt.ru/govern"class="nav-link "><i class="nav-icon fas fa-male"></i><p>Сотрудники</p></a>
+					</li><li class="nav-item">
+					<a href="https://ctp.rt.ru/exam" class="nav-link "><i class="nav-icon fas fa-flask"></i><p>Экспертиза</p></a>
+				</li><li class="nav-item">
+						<a href="https://ctp.rt.ru/Extract/comments"class="nav-link "><i class="nav-icon fas fa-exchange-alt"></i><p>Выгрузка данных</p></a>
+						</li><li class="nav-item">
+					<a href="https://ctp.rt.ru/quiz" class="nav-link active"><i class="nav-icon fas fa-tags"></i><p>Опросник</p></a>
+				</li>				<!--
+				<li class="nav-item">
+					<a href="https://ctp.rt.ru/about" class="nav-link "><i class="nav-icon fas fa-info-circle">
+												</i><p>О портале</p></a>
+				</li>-->
+			</ul>
+		</nav>
+	</div>
+</aside>
+<!-- /.sidebar -->
+<div class="content-wrapper px-4 py-2">	<div class="tab-content pt-2">
+		<div class="tab-pane fade show active" id="appeal-create" role="tabpanel" aria-labelledby="appeal-create">
+			<div class="row mb-2" style="width: 645px;">
+				<div class="input-group col-sm">
+					<div class="input-group-prepend">
+						<span class="input-group-text">МРФ:</span>
+					</div>
+					<select class="custom-select" id="mrf_id">
+					</select>
+				</div>	
+			</div>
+			<div class="row mb-2" style="width: 645px;">
+				<div class="input-group col-sm">
+					<div class="input-group-prepend">
+						<span class="input-group-text">РФ:</span>
+					</div>
+					<select class="custom-select" id="rf_id">
+					</select>
+				</div>	
+			</div>
+			<div class="row mb-2" style="width: 645px;">
+				<div class="input-group col-sm">
+					<div class="input-group-prepend">
+						<span class="input-group-text">Инициатора звонка:</span>
+					</div>
+					<select class="custom-select" id="type_group">
+					</select>
+				</div>
+			</div>
+			<div class="row mb-2" style="width: 645px;">
+				<div class="input-group col-sm">
+					<div class="input-group-prepend">
+						<span class="input-group-text">Проблема:</span>
+					</div>
+					<select class="custom-select" id="type_id">
+					</select>
+				</div>	
+			</div>
+			<div class="row mb-2" style="width: 645px;">
+				<div class="input-group col-sm">
+					<div class="input-group-prepend">
+						<span class="input-group-text">Длительность звонка:</span>
+					</div>
+					<select class="custom-select" id="call_duration_id">
+					</select>
+				</div>
+			</div>
+			<div class="row mb-2" style="width: 645px;">
+				<div class="input-group col-sm">
+					<div class="input-group-prepend">
+						<span class="input-group-text">Номер наряд:</span>
+					</div>
+					<input class="form-control" type="text" id="pi_key">
+				</div>
+			</div>
+			<div class="row mb">
+				<div class="input-group col-sm">
+					<div class="input-group-prepend">
+						<span class="input-group-text">Комментарий:</span>
+					</div>
+				</div>
+			</div>
+			<div class="input-group col-sm">
+				<div class="row mb-2">
+					<textarea class="form-control" id="comment_" rows="2" maxlength="1000" placeholder="Максимальная длина сообщения - 1000 символов, использование спецсимволов желательно избегать" style="width: 630px; height: 150px;"></textarea>
+				</div>
+			</div>
+			<button type="button" class="btn btn-primary" id="create_inst">Ответить</button>
+		</div>
+	</div>
+</div><!--asHtml-->
+<script type="text/javascript">
+var inst_types = JSON.parse('[{"id":"0","name_":"","type_name":""},{"id":"333","name_":"GPON - \u043a\u043b\u0438\u0435\u043d\u0442 \u043d\u0430\u0441\u0442\u0440\u043e\u0435\u043d \u043d\u0435 \u043f\u043e \u0442\u0435\u0445. \u0434\u0430\u043d\u043d\u044b\u043c","type_name":"3\u041b\u0422\u041f"},{"id":"403","name_":"IMS\/vIMS\/SIP \u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0430 \u043f\u043e\u0440\u0442\u0430\/\u043d\u043e\u043c\u0435\u0440\u0430","type_name":"3\u041b\u0422\u041f"},{"id":"334","name_":"Redirect \u043e\u0442\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u0435","type_name":"3\u041b\u0422\u041f"},{"id":"404","name_":"\u0410\u0421\u0420\u0417. \u0417\u0430\u043c\u0435\u043d\u0430 \u043d\u0430\u043b\u043e\u0436\u0435\u043d\u043d\u043e\u0439 (\u041c\u043e\u0441\u043a\u0432\u0430)","type_name":"3\u041b\u0422\u041f"},{"id":"405","name_":"\u0410\u0421\u0420\u0417. \u041f\u0440\u043e\u0447\u0435\u0435 (\u041c\u043e\u0441\u043a\u0432\u0430)","type_name":"3\u041b\u0422\u041f"},{"id":"12","name_":"\u0412\u043e\u043f\u0440\u043e\u0441\u044b \u0438\u043d\u0444\u043e\u0440\u043c\u0430\u0446\u0438\u043e\u043d\u043d\u043e\u0433\u043e \u0445\u0430\u0440\u0430\u043a\u0442\u0435\u0440\u0430 (\u043a\u043e\u043d\u0441\u0443\u043b\u044c\u0442\u0430\u0446\u0438\u044f)","type_name":"3\u041b\u0422\u041f"},{"id":"335","name_":"\u0414\u0440\u0443\u0433\u043e\u0435","type_name":"3\u041b\u0422\u041f"},{"id":"13","name_":"\u0417\u0430\u043c\u0435\u043d\u0430 CPE, \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0430","type_name":"3\u041b\u0422\u041f"},{"id":"14","name_":"\u0417\u0430\u043c\u0435\u043d\u0430 STB (\u043e\u0442\u0432\u044f\u0437\u043a\u0430 mac)","type_name":"3\u041b\u0422\u041f"},{"id":"15","name_":"\u0418\u0437\u043c\u0435\u043d\u0435\u043d\u0438\u0435 \u043f\u0440\u0438\u0432\u044f\u0437\u043a\u0438 PPPoE","type_name":"3\u041b\u0422\u041f"},{"id":"373","name_":"\u041c\u0430\u0441\u0441\u043e\u0432\u0430\u044f \u043f\u0440\u043e\u0431\u043b\u0435\u043c\u0430 \u0441 \u0418\u0421 (ACS, SDP, \u0410\u0421\u0420 \u0438 \u0442.\u0434.)","type_name":"3\u041b\u0422\u041f"},{"id":"391","name_":"\u041c\u0443\u043b\u044c\u0442\u0438\u0441\u043a\u0440\u0438\u043d Wink. \u041f\u0440\u0435\u0434\u043e\u0441\u0442\u0430\u0432\u043b\u0435\u043d\u0438\u0435\/\u0443\u0434\u0430\u043b\u0435\u043d\u0438\u0435 \u0434\u0430\u043d\u043d\u044b\u0445 \u043e\u0442 SAN (\u043a\u043e\u0434, \u043e\u0444\u0435\u0440\u0442\u0430, \u043a\u043e\u043d\u0442\u0430\u043a\u0442)","type_name":"3\u041b\u0422\u041f"},{"id":"336","name_":"\u041d\u0430\u0441\u0442\u0440\u043e\u0438\u0442\u044c \u0434\u043e\u043f. lan-\u043f\u043e\u0440\u0442 \u043f\u043e\u0434 \u0443\u0441\u043b\u0443\u0433\u0443 \u0447\u0435\u0440\u0435\u0437 ACS","type_name":"3\u041b\u0422\u041f"},{"id":"388","name_":"\u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0430 Wi-Fi \u0447\u0435\u0440\u0435\u0437 ACS","type_name":"3\u041b\u0422\u041f"},{"id":"16","name_":"\u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0430 \u043f\u043e\u0440\u0442\u0430 PON\/FTTb\/ADSL","type_name":"3\u041b\u0422\u041f"},{"id":"17","name_":"\u041d\u0435 \u0440\u0430\u0431\u043e\u0442\u0430\u0435\u0442 \u0443\u0441\u043b\u0443\u0433\u0430 (\u0434\u0438\u0430\u0433\u043d\u043e\u0441\u0442\u0438\u043a\u0430)","type_name":"3\u041b\u0422\u041f"},{"id":"9","name_":"\u041e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u0435 \u043f\u0440\u043e\u0448\u0438\u0432\u043a\u0438 \u043d\u0430 CPE","type_name":"3\u041b\u0422\u041f"},{"id":"19","name_":"\u041e\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u0435\u0442 \u043f\u043e\u043f\u044b\u0442\u043a\u0430 \u0440\u0435\u0448\u0438\u0442\u044c \u043f\u0440\u043e\u0431\u043b\u0435\u043c\u0443 \u0447\u0435\u0440\u0435\u0437 \u043f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u0435 (\u0415\u0426\u041c \/ \u0410\u0420\u041c-\u041f\u041c)","type_name":"3\u041b\u0422\u041f"},{"id":"375","name_":"\u041f\u0435\u0440\u0435\u0434\u0430\u0442\u044c \u043f\u0440\u043e\u0431\u043b\u0435\u043c\u0443 \u0432 \u0441\u0442\u043e\u0440\u043e\u043d\u043d\u0438\u0435 \u0418\u0421 (HELPME, JIRA \u0438 \u0442.\u0434.)","type_name":"3\u041b\u0422\u041f"},{"id":"402","name_":"\u041f\u0435\u0440\u0435\u0437\u0430\u0433\u0440\u0443\u0437\u043a\u0430 \u041a\u0414","type_name":"3\u041b\u0422\u041f"},{"id":"337","name_":"\u041f\u0435\u0440\u0435\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u0435 \u043f\u043e\u0440\u0442\u0430 - \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0430","type_name":"3\u041b\u0422\u041f"},{"id":"354","name_":"\u041f\u0440\u0438\u0441\u043e\u0435\u0434\u0438\u043d\u0435\u043d\u043d\u044b\u0439 \u043e\u043f\u0435\u0440\u0430\u0442\u043e\u0440","type_name":"3\u041b\u0422\u041f"},{"id":"20","name_":"\u041f\u0440\u043e\u0432\u0435\u0440\u043a\u0430 \u043d\u0430\u0441\u0442\u0440\u043e\u0435\u043a \u043d\u0430 \u043f\u043e\u0440\u0442\u0443","type_name":"3\u041b\u0422\u041f"},{"id":"21","name_":"\u041f\u0440\u043e\u0432\u0435\u0440\u043a\u0430 \u043f\u0430\u0440\u0430\u043c\u0435\u0442\u0440\u043e\u0432 \u043b\u0438\u043d\u0438\u0438 (\u0415\u041f\u0414 \u043d\u0435 \u043e\u0442\u043e\u0431\u0440\u0430\u0436\u0430\u0435\u0442 \u0434\u0430\u043d\u043d\u044b\u0435)","type_name":"3\u041b\u0422\u041f"},{"id":"22","name_":"\u041f\u0440\u043e\u0432\u0435\u0440\u043a\u0430 \u043f\u0430\u0440\u0430\u043c\u0435\u0442\u0440\u043e\u0432 \u043b\u0438\u043d\u0438\u0438 (\u0415\u041f\u0414 \u043e\u0442\u043e\u0431\u0440\u0430\u0436\u0430\u0435\u0442 \u0434\u0430\u043d\u043d\u044b\u0435)","type_name":"3\u041b\u0422\u041f"},{"id":"24","name_":"\u041f\u0440\u043e\u0441\u043c\u043e\u0442\u0440 \u043b\u043e\u0433\u0438\u043d\/\u043f\u0430\u0440\u043e\u043b\u044c \u043e\u0442 \u0443\u0441\u043b\u0443\u0433 IPTV \/ \u041e\u0422\u0422 \/ \u0428\u041f\u0414","type_name":"3\u041b\u0422\u041f"},{"id":"23","name_":"\u041f\u0440\u043e\u0441\u043c\u043e\u0442\u0440 \u043d\u0430\u043b\u0438\u0447\u0438\u044f \u0441\u0435\u0441\u0441\u0438\u0438","type_name":"3\u041b\u0422\u041f"},{"id":"374","name_":"\u0421\u0431\u0440\u043e\u0441 \u043e\u0448\u0438\u0431\u043e\u043a \u043d\u0430 \u043f\u043e\u0440\u0442\u0443","type_name":"3\u041b\u0422\u041f"},{"id":"27","name_":"\u0421\u043c\u0435\u043d\u0430 \u043f\u0440\u043e\u0444\u0438\u043b\u044f \u0410\u0414\u0421\u041b (\u0415\u041f\u0414)","type_name":"3\u041b\u0422\u041f"},{"id":"28","name_":"\u0421\u043c\u0435\u043d\u0430 \u043f\u0440\u043e\u0444\u0438\u043b\u044f \u0410\u0414\u0421\u041b (\u0440\u0443\u043a\u0430\u043c\u0438)","type_name":"3\u041b\u0422\u041f"},{"id":"29","name_":"\u0423\u0442\u043e\u0447\u043d\u0435\u043d\u0438\u0435 \u0430\u043a\u0442\u0443\u0430\u043b\u044c\u043d\u044b\u0445 \u0442\u0435\u0445. \u0414\u0430\u043d\u043d\u044b\u0445\/\u043f\u043e\u0438\u0441\u043a \u043f\u043e\u0440\u0442\u0430","type_name":"3\u041b\u0422\u041f"},{"id":"338","name_":"Eltex OLT - \u043d\u0435 \u043e\u0442\u043e\u0431\u0440\u0430\u0436\u0430\u0435\u0442\u0441\u044f \u0437\u0430\u0442\u0443\u0445\u0430\u043d\u0438\u0435 \u0438 PLOAM","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"339","name_":"Huawei OLT - ONT, \u043f\u0440\u0438\u0432\u044f\u0437\u043a\u0430 \u043f\u043e \u0441\u0435\u0440\u0438\u0439\u043d\u043e\u043c\u0443 \u043d\u043e\u043c\u0435\u0440\u0443","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"340","name_":"IMS \u0441\u043e\u0437\u0434\u0430\u043d\u0438\u0435 \u043f\u0440\u043e\u0444\u0438\u043b\u044f \u043d\u0430 SPG \u0438 \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0430","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"341","name_":"vIMS \u0440\u0443\u0447\u043d\u0430\u044f \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0430","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"49","name_":"\u0412\u043e\u043f\u0440\u043e\u0441\u044b \u0438\u043d\u0444\u043e\u0440\u043c\u0430\u0446\u0438\u043e\u043d\u043d\u043e\u0433\u043e \u0445\u0430\u0440\u0430\u043a\u0442\u0435\u0440\u0430 (\u043a\u043e\u043d\u0441\u0443\u043b\u044c\u0442\u0430\u0446\u0438\u044f)","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"371","name_":"\u0412\u043e\u0441\u0441\u0442\u0430\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u0435 \u0447\u0435\u0440\u0435\u0437 ACS","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"46","name_":"\u0414\u043e\u043f.\u0440\u0430\u0431\u043e\u0442\u044b\/\u0434\u0435\u043c\u043e\u043d\u0442\u0430\u0436 (\u043f\u043e\u0434\u0432\u0438\u043d\u0443\u0442\u044c, \u0438\u0437\u043c\u0435\u043d\u0438\u0442\u044c \u0412\u0412, \u0430\u043d\u043d\u0443\u043b\u0438\u0440\u043e\u0432\u0430\u0442\u044c)","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"342","name_":"\u0414\u0440\u0443\u0433\u043e\u0435","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"400","name_":"\u0417\u0430\u0431\u0440\u043e\u043d\u0438\u0440\u043e\u0432\u0430\u0442\u044c SIM \u043a\u0430\u0440\u0442\u0443","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"51","name_":"\u0417\u0430\u043c\u0435\u043d\u0430 CPE, \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0430 ","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"343","name_":"\u0417\u0430\u043c\u0435\u043d\u0430 STB (\u043e\u0442\u0432\u044f\u0437\u043a\u0430 mac)","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"376","name_":"\u0418\u0437\u043c\u0435\u043d\u0435\u043d\u0438\u0435 \u043f\u0440\u0438\u0432\u044f\u0437\u043a\u0438 PPPoE","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"345","name_":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0442\u043e\u0440 \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0438\u043b\u0441\u044f \u043d\u0435 \u043f\u043e \u0442\u0435\u0445. \u0434\u0430\u043d\u043d\u044b\u043c ADSL","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"52","name_":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0442\u043e\u0440 \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0438\u043b\u0441\u044f \u043d\u0435 \u043f\u043e \u0442\u0435\u0445. \u0434\u0430\u043d\u043d\u044b\u043c FTTb","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"53","name_":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0442\u043e\u0440 \u043f\u043e\u0434\u043a\u043b\u044e\u0447\u0438\u043b\u0441\u044f \u043d\u0435 \u043f\u043e \u0442\u0435\u0445. \u0434\u0430\u043d\u043d\u044b\u043c FTTh","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"346","name_":"\u0418\u0441\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u0435 \u043d\u0430\u0440\u044f\u0434\u043e\u0432 \u0438\u0437 HPSA","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"33","name_":"\u041c\u0430\u0441\u0441\u043e\u0432\u0430\u044f \u043f\u0440\u043e\u0431\u043b\u0435\u043c\u0430 HPSA","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"34","name_":"\u041c\u0430\u0441\u0441\u043e\u0432\u0430\u044f \u043f\u0440\u043e\u0431\u043b\u0435\u043c\u0430 \u0441 \u0418\u0421 (ACS, SDP, \u0410\u0421\u0420 \u0438 \u0442.\u0434.)","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"35","name_":"\u041c\u0443\u043b\u044c\u0442\u0438\u0440\u0443\u043c \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0430","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"392","name_":"\u041c\u0443\u043b\u044c\u0442\u0438\u0441\u043a\u0440\u0438\u043d Wink. \u041f\u0440\u0435\u0434\u043e\u0441\u0442\u0430\u0432\u043b\u0435\u043d\u0438\u0435\/\u0443\u0434\u0430\u043b\u0435\u043d\u0438\u0435 \u0434\u0430\u043d\u043d\u044b\u0445 \u043e\u0442 SAN (\u043a\u043e\u0434, \u043e\u0444\u0435\u0440\u0442\u0430, \u043a\u043e\u043d\u0442\u0430\u043a\u0442)","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"36","name_":"\u041d\u0430\u0441\u0442\u0440\u043e\u0438\u0442\u044c \u0434\u043e\u043f. lan-\u043f\u043e\u0440\u0442 \u043f\u043e\u0434 \u0443\u0441\u043b\u0443\u0433\u0443 \u0447\u0435\u0440\u0435\u0437 ACS","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"37","name_":"\u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0430 Wi-Fi \u0447\u0435\u0440\u0435\u0437 ACS","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"55","name_":"\u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0430 \u043f\u043e\u0440\u0442\u0430 PON\/FTTb\/ADSL","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"56","name_":"\u041d\u0435\u043a\u043e\u0440\u0440\u0435\u043a\u0442\u043d\u043e \u0441\u043e\u0437\u0434\u0430\u043d \u043d\u0430\u0440\u044f\u0434, \u043d\u0435\u043e\u0431\u0445\u043e\u0434\u0438\u043c\u0430 \u0440\u0443\u0447\u043d\u0430\u044f \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0430","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"57","name_":"\u041d\u0435\u043a\u043e\u0440\u0440\u0435\u043a\u0442\u043d\u044b\u0435 \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u044f \u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0442\u043e\u0440\u0430","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"62","name_":"\u041d\u0435\u043a\u043e\u0440\u0440\u0435\u043a\u0442\u043d\u044b\u0435 \u0434\u0435\u0439\u0441\u0442\u0432\u0438\u044f \u041d\u041f\u041f","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"349","name_":"\u041d\u0435 \u043e\u0442\u043a\u043b\u044e\u0447\u0430\u043b ONT \u043d\u0430 2 \u043c\u0438\u043d\u0443\u0442\u044b","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"38","name_":"\u041d\u0435 \u0440\u0430\u0431\u043e\u0442\u0430\u0435\u0442 \u0443\u0441\u043b\u0443\u0433\u0430. \u0414\u0438\u0430\u0433\u043d\u043e\u0441\u0442\u0438\u043a\u0430 \u043d\u0435\u0438\u0441\u043f\u0440\u0430\u0432\u043d\u043e\u0441\u0442\u0438","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"353","name_":"\u041d\u0435 \u0441\u043e\u0437\u0434\u0430\u043d \u043b\u043e\u0433\u0438\u043d \u0418\u043d\u0442\u0435\u0440\u043d\u0435\u0442 \u0438\u043b\u0438 \u0422\u0412","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"44","name_":"\u041e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u0435 \u043f\u0440\u043e\u0448\u0438\u0432\u043a\u0438 \u043d\u0430 CPE","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"377","name_":"\u041e\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u0435\u0442 \u043f\u043e\u043f\u044b\u0442\u043a\u0430 \u0430\u043a\u0442\u0438\u0432\u0430\u0446\u0438\u0438 \u0438\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0442\u043e\u0440\u043e\u043c \u0447\u0435\u0440\u0435\u0437 \u043f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u0435 (\u0415\u0426\u041c \/ \u0410\u0420\u041c-\u041f\u041c)","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"372","name_":"\u041e\u0448\u0438\u0431\u043a\u0430 HPSA","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"41","name_":"\u041e\u0448\u0438\u0431\u043a\u0430 \u0432 \u043d\u0430\u0440\u044f\u0434\u0435","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"381","name_":"\u041f\u0435\u0440\u0435\u0434\u0430\u0442\u044c \u043f\u0440\u043e\u0431\u043b\u0435\u043c\u0443 \u0432 \u0441\u0442\u043e\u0440\u043e\u043d\u043d\u0438\u0435 \u0418\u0421 (HELPME, JIRA \u0438 \u0442.\u0434.)","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"42","name_":"\u041f\u0435\u0440\u0435\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u0435\/\u043f\u0435\u0440\u0435\u0435\u0437\u0434 \u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0430 \u0441\u0435\u0440\u0432\u0438\u0441\u043e\u0432","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"401","name_":"\u041f\u0440\u0438\u0432\u044f\u0437\u043a\u0430 \u043e\u0431\u043e\u0440\u0443\u0434\u043e\u0432\u0430\u043d\u0438\u044f \u043a \u043b\/\u0441 \u043a\u043b\u0438\u0435\u043d\u0442\u0430","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"356","name_":"\u041f\u0440\u0438\u043d\u0443\u0434\u0438\u0442\u0435\u043b\u044c\u043d\u0430\u044f \u0430\u043a\u0442\u0438\u0432\u0430\u0446\u0438\u044f HPSA","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"355","name_":"\u041f\u0440\u0438\u0441\u043e\u0435\u0434\u0438\u043d\u0435\u043d\u043d\u044b\u0439 \u043e\u043f\u0435\u0440\u0430\u0442\u043e\u0440","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"43","name_":"\u041f\u0440\u043e\u0432\u0435\u0440\u043a\u0430 \u043d\u0430\u0441\u0442\u0440\u043e\u0435\u043a \u043d\u0430 \u043f\u043e\u0440\u0442\u0443\/CPE","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"378","name_":"\u041f\u0440\u043e\u0432\u0435\u0440\u043a\u0430 \u043f\u0430\u0440\u0430\u043c\u0435\u0442\u0440\u043e\u0432 \u043b\u0438\u043d\u0438\u0438 (\u0415\u041f\u0414 \u043d\u0435 \u043e\u0442\u043e\u0431\u0440\u0430\u0436\u0430\u0435\u0442 \u0434\u0430\u043d\u043d\u044b\u0435)","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"379","name_":"\u041f\u0440\u043e\u0432\u0435\u0440\u043a\u0430 \u043f\u0430\u0440\u0430\u043c\u0435\u0442\u0440\u043e\u0432 \u043b\u0438\u043d\u0438\u0438 (\u0415\u041f\u0414 \u043e\u0442\u043e\u0431\u0440\u0430\u0436\u0430\u0435\u0442 \u0434\u0430\u043d\u043d\u044b\u0435)","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"382","name_":"\u041f\u0440\u043e\u0441\u043c\u043e\u0442\u0440 \u043b\u043e\u0433\u0438\u043d\/\u043f\u0430\u0440\u043e\u043b\u044c \u043e\u0442 \u0443\u0441\u043b\u0443\u0433 IPTV \/ \u041e\u0422\u0422 \/ \u0428\u041f\u0414","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"384","name_":"\u0420\u0430\u0431\u043e\u0442\u0430 \u0432 \u0415\u041b\u041a","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"380","name_":"\u0421\u0431\u0440\u043e\u0441 \u043e\u0448\u0438\u0431\u043e\u043a \u043d\u0430 \u043f\u043e\u0440\u0442\u0443","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"394","name_":"\u0423\u0441\u0442\u0430\u043d\u043e\u0432\u0438\u0442\u044c \u0447\u0435\u043a \u0431\u043e\u043a\u0441 \\\"\u041f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0430\/\u043f\u0440\u043e\u0434\u0435\u043c\u043e\u043d\u0441\u0442\u0440\u0438\u0440\u043e\u0432\u0430\u043d\u0430\\\"","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"383","name_":"\u0423\u0442\u043e\u0447\u043d\u0435\u043d\u0438\u0435 \u0430\u043a\u0442\u0443\u0430\u043b\u044c\u043d\u044b\u0445 \u0442\u0435\u0445. \u0434\u0430\u043d\u043d\u044b\u0445\/\u043f\u043e\u0438\u0441\u043a \u043f\u043e\u0440\u0442\u0430","type_name":"\u0418\u043d\u0441\u0442\u0430\u043b\u043b\u044f\u0446\u0438\u044f"},{"id":"359","name_":"\u041d\u0435 \u0440\u0430\u0431\u043e\u0442\u0430\u0435\u0442 \u0443\u0441\u043b\u0443\u0433\u0430 \u041a\u0422\u0412\/\u0426\u0422\u0412","type_name":"\u041a\u0414\u0413 1 \u041b\u0422\u041f"},{"id":"360","name_":"\u041d\u0435 \u0440\u0430\u0431\u043e\u0442\u0430\u0435\u0442 \u0443\u0441\u043b\u0443\u0433\u0430 \u0420\u0430\u0434\u0438\u043e","type_name":"\u041a\u0414\u0413 1 \u041b\u0422\u041f"},{"id":"361","name_":"\u0421\u043f\u0435\u0446\u0438\u0430\u043b\u0438\u0441\u0442 3 \u041b\u0422\u041f \u043d\u0435 \u0432\u044b\u0448\u0435\u043b \u0432 \u0441\u043e\u0433\u043b\u0430\u0441\u043e\u0432\u0430\u043d\u043d\u043e\u0435 \u0432\u0440\u0435\u043c\u044f","type_name":"\u041a\u0414\u0413 1 \u041b\u0422\u041f"},{"id":"389","name_":"NRFS \u0441\u043e\u0437\u0434\u0430\u0442\u044c\/\u0441\u043d\u044f\u0442\u044c \u043f\u0440\u0438\u0437\u043d\u0430\u043a","type_name":"\u041a\u0414\u0413 3 \u041b\u0422\u041f"},{"id":"406","name_":"\u0414\u043e\u0437\u0432\u043e\u043d \u0434\u043e \u043a\u043b\u0438\u0435\u043d\u0442\u0430 \u043f\u043e \u043f\u0440\u043e\u0441\u044c\u0431\u0435 3 \u041b\u0422\u041f","type_name":"\u041a\u0414\u0413 3 \u041b\u0422\u041f"},{"id":"362","name_":"\u0417\u0430\u043a\u0440\u044b\u0442\u044c \u041b\u041d\/\u0412\u041d\/\u0421\u041d \u0438 \u043e\u0444\u043e\u0440\u043c\u0438\u0442\u044c \u043d\u0430\u0440\u044f\u0434 \u0434\u0440\u0443\u0433\u043e\u0433\u043e \u0442\u0438\u043f\u0430","type_name":"\u041a\u0414\u0413 3 \u041b\u0422\u041f"},{"id":"363","name_":"\u0417\u0430\u043a\u0440\u044b\u0442\u044c \u043d\u0430\u0440\u044f\u0434","type_name":"\u041a\u0414\u0413 3 \u041b\u0422\u041f"},{"id":"369","name_":"\u041d\u0430\u0437\u043d\u0430\u0447\u0438\u0442\u044c \u043d\u0430\u0440\u044f\u0434 \u043d\u0430 \u0438\u0441\u043f\u043e\u043b\u043d\u0438\u0442\u0435\u043b\u044f 3 \u041b\u0422\u041f","type_name":"\u041a\u0414\u0413 3 \u041b\u0422\u041f"},{"id":"364","name_":"\u041f\u0435\u0440\u0435\u0434\u0430\u0442\u044c \u043d\u0430\u0440\u044f\u0434 \u043d\u0430 1-\u0422\u041f","type_name":"\u041a\u0414\u0413 3 \u041b\u0422\u041f"},{"id":"365","name_":"\u041f\u0435\u0440\u0435\u0434\u0430\u0442\u044c \u043d\u0430\u0440\u044f\u0434 \u043d\u0430 2-\u0422\u041f","type_name":"\u041a\u0414\u0413 3 \u041b\u0422\u041f"},{"id":"390","name_":"\u041f\u0435\u0440\u0435\u043d\u0430\u0437\u043d\u0430\u0447\u0438\u0442\u044c \u043d\u0430\u0440\u044f\u0434 \u043d\u0430 \u0434\u0440\u0443\u0433\u043e\u0439 \u0443\u0447\u0430\u0441\u0442\u043e\u043a","type_name":"\u041a\u0414\u0413 3 \u041b\u0422\u041f"},{"id":"370","name_":"\u041f\u0435\u0440\u0435\u043d\u0430\u0437\u043d\u0430\u0447\u0438\u0442\u044c \u043d\u0430\u0440\u044f\u0434 \u043d\u0430 \u0438\u0441\u043f\u043e\u043b\u043d\u0438\u0442\u0435\u043b\u044f 3 \u041b\u0422\u041f","type_name":"\u041a\u0414\u0413 3 \u041b\u0422\u041f"},{"id":"366","name_":"\u041f\u0435\u0440\u0435\u043d\u043e\u0441 \u0432\u0440\u0435\u043c\u0435\u043d\u0438 \u0432\u0438\u0437\u0438\u0442\u0430","type_name":"\u041a\u0414\u0413 3 \u041b\u0422\u041f"},{"id":"386","name_":"\u041f\u0440\u0438\u0432\u044f\u0437\u0430\u0442\u044c \u041a\u0418 \u043a \u0413\u041f (\u0421\u0418)","type_name":"\u041a\u0414\u0413 3 \u041b\u0422\u041f"},{"id":"367","name_":"\u041f\u0440\u0438\u0432\u044f\u0437\u043a\u0430 \u043e\u0431\u043e\u0440\u0443\u0434\u043e\u0432\u0430\u043d\u0438\u044f \u043a \u043b\/\u0441 \u043a\u043b\u0438\u0435\u043d\u0442\u0430","type_name":"\u041a\u0414\u0413 3 \u041b\u0422\u041f"},{"id":"385","name_":"\u0421\u043e\u0437\u0434\u0430\u0442\u044c \u0413\u041f (\u0421\u0418)","type_name":"\u041a\u0414\u0413 3 \u041b\u0422\u041f"},{"id":"368","name_":"\u0423\u0442\u043e\u0447\u043d\u0435\u043d\u0438\u0435 \u0443\u0441\u043b\u043e\u0432\u0438\u0439 \u0434\u043e\u0433\u043e\u0432\u043e\u0440\u0430 \u043f\u043e \u043e\u0431\u043e\u0440\u0443\u0434\u043e\u0432\u0430\u043d\u0438\u044e","type_name":"\u041a\u0414\u0413 3 \u041b\u0422\u041f"},{"id":"397","name_":"\u0412\u0438\u0434\u0435\u043e\u043d\u0430\u0431\u043b\u044e\u0434\u0435\u043d\u0438\u0435. \u041d\u0435 \u0440\u0430\u0431\u043e\u0442\u0430\u0435\u0442 \u0443\u0441\u043b\u0443\u0433\u0430. \u0414\u0438\u0430\u0433\u043d\u043e\u0441\u0442\u0438\u043a\u0430 \u043d\u0435\u0438\u0441\u043f\u0440\u0430\u0432\u043d\u043e\u0441\u0442\u0438","type_name":"\u041a\u041b\u042e\u0427"},{"id":"396","name_":"\u0414\u043e\u043c\u043e\u0444\u043e\u043d. \u041d\u0435 \u0440\u0430\u0431\u043e\u0442\u0430\u0435\u0442 \u0443\u0441\u043b\u0443\u0433\u0430. \u0414\u0438\u0430\u0433\u043d\u043e\u0441\u0442\u0438\u043a\u0430 \u043d\u0435\u0438\u0441\u043f\u0440\u0430\u0432\u043d\u043e\u0441\u0442\u0438","type_name":"\u041a\u041b\u042e\u0427"},{"id":"395","name_":"\u0414\u043e\u043c\u043e\u0444\u043e\u043d. \u041f\u0440\u043e\u0432\u0435\u0440\u043a\u0430 \u043d\u0430\u0441\u0442\u0440\u043e\u0435\u043a\/\u043f\u0435\u0440\u0435\u043d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0430 \u043f\u043e \u0437\u0430\u043f\u0440\u043e\u0441\u0443 \u0412\u0421","type_name":"\u041a\u041b\u042e\u0427"},{"id":"399","name_":"\u0421\u041a\u0423\u0414. \u041d\u0435 \u0440\u0430\u0431\u043e\u0442\u0430\u0435\u0442 \u0443\u0441\u043b\u0443\u0433\u0430. \u0414\u0438\u0430\u0433\u043d\u043e\u0441\u0442\u0438\u043a\u0430 \u043d\u0435\u0438\u0441\u043f\u0440\u0430\u0432\u043d\u043e\u0441\u0442\u0438","type_name":"\u041a\u041b\u042e\u0427"},{"id":"398","name_":"\u0422\u0435\u043b\u0435\u043c\u0435\u0442\u0440\u0438\u044f. \u041d\u0435 \u0440\u0430\u0431\u043e\u0442\u0430\u0435\u0442 \u0443\u0441\u043b\u0443\u0433\u0430. \u0414\u0438\u0430\u0433\u043d\u043e\u0441\u0442\u0438\u043a\u0430 \u043d\u0435\u0438\u0441\u043f\u0440\u0430\u0432\u043d\u043e\u0441\u0442\u0438","type_name":"\u041a\u041b\u042e\u0427"},{"id":"63","name_":"\u041b\u0438\u0447\u043d\u044b\u0435 \u043f\u0440\u043e\u0441\u044c\u0431\u044b, \u0431\u0435\u0437 \u0437\u0430\u044f\u0432\u043e\u043a \u0438\u043b\u0438 \u043d\u0430\u0440\u044f\u0434\u043e\u0432","type_name":"\u0420\u0430\u0437\u043d\u043e\u0435"},{"id":"67","name_":"\u041d\u0435 \u0440\u0435\u0448\u0435\u043d\u043d\u044b\u0435 \u043f\u0440\u043e\u0431\u043b\u0435\u043c\u044b","type_name":"\u0420\u0430\u0437\u043d\u043e\u0435"},{"id":"64","name_":"\u041e\u0448\u0438\u0431\u043b\u0438\u0441\u044c \u043d\u043e\u043c\u0435\u0440\u043e\u043c","type_name":"\u0420\u0430\u0437\u043d\u043e\u0435"},{"id":"393","name_":"\u041f\u0440\u043e\u0431\u043b\u0435\u043c\u0430 \u0440\u0435\u0448\u0435\u043d\u0430, \u043f\u043e\u043c\u043e\u0449\u044c \u043d\u0435 \u043f\u043e\u0442\u0440\u0435\u0431\u043e\u0432\u0430\u043b\u0430\u0441\u044c","type_name":"\u0420\u0430\u0437\u043d\u043e\u0435"},{"id":"387","name_":"\u0421\u0431\u0440\u043e\u0441 \u0437\u0432\u043e\u043d\u043a\u0430","type_name":"\u0420\u0430\u0437\u043d\u043e\u0435"}]');
+var mrf_rf = JSON.parse('[{"mrf_id":"13","mrf_sname":"\u0412\u043e\u043b\u0433\u0430","krf_id":"1942","rf_sname":"\u0411\u0430\u0448\u043a\u0438\u0440\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"13","mrf_sname":"\u0412\u043e\u043b\u0433\u0430","krf_id":"1952","rf_sname":"\u041a\u0438\u0440\u043e\u0432\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"13","mrf_sname":"\u0412\u043e\u043b\u0433\u0430","krf_id":"1944","rf_sname":"\u041d\u0438\u0436\u0435\u0433\u043e\u0440\u043e\u0434\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"13","mrf_sname":"\u0412\u043e\u043b\u0433\u0430","krf_id":"1945","rf_sname":"\u041e\u0440\u0435\u043d\u0431\u0443\u0440\u0433\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"13","mrf_sname":"\u0412\u043e\u043b\u0433\u0430","krf_id":"1941","rf_sname":"\u041f\u0435\u043d\u0437\u0435\u043d\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"13","mrf_sname":"\u0412\u043e\u043b\u0433\u0430","krf_id":"1949","rf_sname":"\u0421\u0430\u043c\u0430\u0440\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"13","mrf_sname":"\u0412\u043e\u043b\u0433\u0430","krf_id":"1943","rf_sname":"\u0421\u0430\u0440\u0430\u0442\u043e\u0432\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"13","mrf_sname":"\u0412\u043e\u043b\u0433\u0430","krf_id":"1946","rf_sname":"\u0423\u043b\u044c\u044f\u043d\u043e\u0432\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"13","mrf_sname":"\u0412\u043e\u043b\u0433\u0430","krf_id":"1947","rf_sname":"\u0424\u0438\u043b\u0438\u0430\u043b \u0432 \u0420\u0435\u0441\u043f\u0443\u0431\u043b\u0438\u043a\u0435 \u041c\u0430\u0440\u0438\u0439 \u042d\u043b"},{"mrf_id":"13","mrf_sname":"\u0412\u043e\u043b\u0433\u0430","krf_id":"1948","rf_sname":"\u0424\u0438\u043b\u0438\u0430\u043b \u0432 \u0420\u0435\u0441\u043f\u0443\u0431\u043b\u0438\u043a\u0435 \u041c\u043e\u0440\u0434\u043e\u0432\u0438\u044f"},{"mrf_id":"13","mrf_sname":"\u0412\u043e\u043b\u0433\u0430","krf_id":"1953","rf_sname":"\u0424\u0438\u043b\u0438\u0430\u043b  \u0432 \u0420\u0435\u0441\u043f\u0443\u0431\u043b\u0438\u043a\u0435 \u0422\u0430\u0442\u0430\u0440\u0441\u0442\u0430\u043d"},{"mrf_id":"13","mrf_sname":"\u0412\u043e\u043b\u0433\u0430","krf_id":"1951","rf_sname":"\u0424\u0438\u043b\u0438\u0430\u043b  \u0432 \u0423\u0434\u043c\u0443\u0440\u0442\u0441\u043a\u043e\u0439 \u0420\u0435\u0441\u043f\u0443\u0431\u043b\u0438\u043a\u0435"},{"mrf_id":"13","mrf_sname":"\u0412\u043e\u043b\u0433\u0430","krf_id":"1950","rf_sname":"\u0424\u0438\u043b\u0438\u0430\u043b \u0432 \u0427\u0443\u0432\u0430\u0448\u0441\u043a\u043e\u0439 \u0420\u0435\u0441\u043f\u0443\u0431\u043b\u0438\u043a\u0435"},{"mrf_id":"17","mrf_sname":"\u0414\u0430\u043b\u044c\u043d\u0438\u0439 \u0412\u043e\u0441\u0442\u043e\u043a","krf_id":"190","rf_sname":"\u0410\u043c\u0443\u0440\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"17","mrf_sname":"\u0414\u0430\u043b\u044c\u043d\u0438\u0439 \u0412\u043e\u0441\u0442\u043e\u043a","krf_id":"271","rf_sname":"\u041a\u0430\u043c\u0447\u0430\u0442\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"17","mrf_sname":"\u0414\u0430\u043b\u044c\u043d\u0438\u0439 \u0412\u043e\u0441\u0442\u043e\u043a","krf_id":"193","rf_sname":"\u041c\u0430\u0433\u0430\u0434\u0430\u043d\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"17","mrf_sname":"\u0414\u0430\u043b\u044c\u043d\u0438\u0439 \u0412\u043e\u0441\u0442\u043e\u043a","krf_id":"192","rf_sname":"\u041f\u0440\u0438\u043c\u043e\u0440\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"17","mrf_sname":"\u0414\u0430\u043b\u044c\u043d\u0438\u0439 \u0412\u043e\u0441\u0442\u043e\u043a","krf_id":"194","rf_sname":"\u0421\u0430\u0445\u0430\u043b\u0438\u043d\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"17","mrf_sname":"\u0414\u0430\u043b\u044c\u043d\u0438\u0439 \u0412\u043e\u0441\u0442\u043e\u043a","krf_id":"272","rf_sname":"\u0424\u0438\u043b\u0438\u0430\u043b \u0421\u0430\u0445\u0430\u0442\u0435\u043b\u0435\u043a\u043e\u043c"},{"mrf_id":"17","mrf_sname":"\u0414\u0430\u043b\u044c\u043d\u0438\u0439 \u0412\u043e\u0441\u0442\u043e\u043a","krf_id":"195","rf_sname":"\u0425\u0430\u0431\u0430\u0440\u043e\u0432\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"0","mrf_sname":"\u041d\u0435 \u043e\u043f\u0440\u0435\u0434\u0435\u043b\u0435\u043d","krf_id":"0","rf_sname":"\u041d\u0435 \u043e\u043f\u0440\u0435\u0434\u0435\u043b\u0435\u043d"},{"mrf_id":"12","mrf_sname":"\u0421\u0435\u0432\u0435\u0440\u043e-\u0417\u0430\u043f\u0430\u0434","krf_id":"25","rf_sname":"\u0410\u0440\u0445\u0430\u043d\u0433\u0435\u043b\u044c\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"12","mrf_sname":"\u0421\u0435\u0432\u0435\u0440\u043e-\u0417\u0430\u043f\u0430\u0434","krf_id":"24","rf_sname":"\u0412\u043e\u043b\u043e\u0433\u043e\u0434\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"12","mrf_sname":"\u0421\u0435\u0432\u0435\u0440\u043e-\u0417\u0430\u043f\u0430\u0434","krf_id":"26","rf_sname":"\u041a\u0430\u043b\u0438\u043d\u0438\u043d\u0433\u0440\u0430\u0434\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"12","mrf_sname":"\u0421\u0435\u0432\u0435\u0440\u043e-\u0417\u0430\u043f\u0430\u0434","krf_id":"22","rf_sname":"\u041a\u0430\u0440\u0435\u043b\u044c\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"12","mrf_sname":"\u0421\u0435\u0432\u0435\u0440\u043e-\u0417\u0430\u043f\u0430\u0434","krf_id":"20","rf_sname":"\u041a\u043e\u043c\u0438 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"12","mrf_sname":"\u0421\u0435\u0432\u0435\u0440\u043e-\u0417\u0430\u043f\u0430\u0434","krf_id":"19","rf_sname":"\u041c\u0443\u0440\u043c\u0430\u043d\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"12","mrf_sname":"\u0421\u0435\u0432\u0435\u0440\u043e-\u0417\u0430\u043f\u0430\u0434","krf_id":"2182","rf_sname":"\u041f\u0435\u0442\u0435\u0440\u0431\u0443\u0440\u0433\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"12","mrf_sname":"\u0421\u0435\u0432\u0435\u0440\u043e-\u0417\u0430\u043f\u0430\u0434","krf_id":"23","rf_sname":"\u0424\u0438\u043b\u0438\u0430\u043b \u0432 \u041d\u043e\u0432\u0433\u043e\u0440\u043e\u0434\u0441\u043a\u043e\u0439 \u0438 \u041f\u0441\u043a\u043e\u0432\u0441\u043a\u043e\u0439 \u043e\u0431\u043b\u0430\u0441\u0442\u044f\u0445"},{"mrf_id":"16","mrf_sname":"\u0421\u0438\u0431\u0438\u0440\u044c","krf_id":"262","rf_sname":"\u0410\u043b\u0442\u0430\u0439\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"16","mrf_sname":"\u0421\u0438\u0431\u0438\u0440\u044c","krf_id":"269","rf_sname":"\u0411\u0443\u0440\u044f\u0442\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"16","mrf_sname":"\u0421\u0438\u0431\u0438\u0440\u044c","krf_id":"263","rf_sname":"\u0417\u0430\u0431\u0430\u0439\u043a\u0430\u043b\u044c\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"16","mrf_sname":"\u0421\u0438\u0431\u0438\u0440\u044c","krf_id":"270","rf_sname":"\u0418\u0440\u043a\u0443\u0442\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"16","mrf_sname":"\u0421\u0438\u0431\u0438\u0440\u044c","krf_id":"267","rf_sname":"\u041a\u0435\u043c\u0435\u0440\u043e\u0432\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"16","mrf_sname":"\u0421\u0438\u0431\u0438\u0440\u044c","krf_id":"268","rf_sname":"\u041a\u0440\u0430\u0441\u043d\u043e\u044f\u0440\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"16","mrf_sname":"\u0421\u0438\u0431\u0438\u0440\u044c","krf_id":"266","rf_sname":"\u041d\u043e\u0432\u043e\u0441\u0438\u0431\u0438\u0440\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"16","mrf_sname":"\u0421\u0438\u0431\u0438\u0440\u044c","krf_id":"264","rf_sname":"\u041e\u043c\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"16","mrf_sname":"\u0421\u0438\u0431\u0438\u0440\u044c","krf_id":"265","rf_sname":"\u0422\u043e\u043c\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"15","mrf_sname":"\u0423\u0440\u0430\u043b","krf_id":"1764","rf_sname":"\u0415\u043a\u0430\u0442\u0435\u0440\u0438\u043d\u0431\u0443\u0440\u0433\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"15","mrf_sname":"\u0423\u0440\u0430\u043b","krf_id":"1763","rf_sname":"\u041f\u0435\u0440\u043c\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"15","mrf_sname":"\u0423\u0440\u0430\u043b","krf_id":"1765","rf_sname":"\u0424\u0438\u043b\u0438\u0430\u043b \u0432 \u0422\u044e\u043c\u0435\u043d\u0441\u043a\u043e\u0439 \u0438 \u041a\u0443\u0440\u0433\u0430\u043d\u0441\u043a\u043e\u0439 \u043e\u0431\u043b\u0430\u0441\u0442\u044f\u0445"},{"mrf_id":"15","mrf_sname":"\u0423\u0440\u0430\u043b","krf_id":"1761","rf_sname":"\u0425\u0430\u043d\u0442\u044b-\u041c\u0430\u043d\u0441\u0438\u0439\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"15","mrf_sname":"\u0423\u0440\u0430\u043b","krf_id":"1762","rf_sname":"\u0427\u0435\u043b\u044f\u0431\u0438\u043d\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"15","mrf_sname":"\u0423\u0440\u0430\u043b","krf_id":"1766","rf_sname":"\u042f\u043c\u0430\u043b\u043e-\u041d\u0435\u043d\u0435\u0446\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"11","mrf_sname":"\u0426\u0435\u043d\u0442\u0440","krf_id":"179","rf_sname":"\u0411\u0435\u043b\u0433\u043e\u0440\u043e\u0434\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"11","mrf_sname":"\u0426\u0435\u043d\u0442\u0440","krf_id":"165","rf_sname":"\u0411\u0440\u044f\u043d\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"11","mrf_sname":"\u0426\u0435\u043d\u0442\u0440","krf_id":"180","rf_sname":"\u0412\u043b\u0430\u0434\u0438\u043c\u0438\u0440\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"11","mrf_sname":"\u0426\u0435\u043d\u0442\u0440","krf_id":"176","rf_sname":"\u0412\u043e\u0440\u043e\u043d\u0435\u0436\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"11","mrf_sname":"\u0426\u0435\u043d\u0442\u0440","krf_id":"172","rf_sname":"\u0418\u0432\u0430\u043d\u043e\u0432\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"11","mrf_sname":"\u0426\u0435\u043d\u0442\u0440","krf_id":"169","rf_sname":"\u041a\u0430\u043b\u0443\u0436\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"11","mrf_sname":"\u0426\u0435\u043d\u0442\u0440","krf_id":"177","rf_sname":"\u041a\u043e\u0441\u0442\u0440\u043e\u043c\u0441\u043a\u043e\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"11","mrf_sname":"\u0426\u0435\u043d\u0442\u0440","krf_id":"164","rf_sname":"\u041a\u0443\u0440\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"11","mrf_sname":"\u0426\u0435\u043d\u0442\u0440","krf_id":"166","rf_sname":"\u041b\u0438\u043f\u0435\u0446\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"11","mrf_sname":"\u0426\u0435\u043d\u0442\u0440","krf_id":"173","rf_sname":"\u041c\u043e\u0441\u043a\u043e\u0432\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"11","mrf_sname":"\u0426\u0435\u043d\u0442\u0440","krf_id":"170","rf_sname":"\u041e\u0440\u043b\u043e\u0432\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"11","mrf_sname":"\u0426\u0435\u043d\u0442\u0440","krf_id":"171","rf_sname":"\u0420\u044f\u0437\u0430\u043d\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"11","mrf_sname":"\u0426\u0435\u043d\u0442\u0440","krf_id":"174","rf_sname":"\u0421\u043c\u043e\u043b\u0435\u043d\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"11","mrf_sname":"\u0426\u0435\u043d\u0442\u0440","krf_id":"2672","rf_sname":"\u0421\u0442\u043e\u043b\u0438\u0447\u043d\u044b\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"11","mrf_sname":"\u0426\u0435\u043d\u0442\u0440","krf_id":"2673","rf_sname":"\u0421\u0442\u043e\u043b\u0438\u0447\u043d\u044b\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"11","mrf_sname":"\u0426\u0435\u043d\u0442\u0440","krf_id":"261","rf_sname":"\u0421\u0442\u043e\u043b\u0438\u0447\u043d\u044b\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"11","mrf_sname":"\u0426\u0435\u043d\u0442\u0440","krf_id":"2661","rf_sname":"\u0421\u0442\u043e\u043b\u0438\u0447\u043d\u044b\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"11","mrf_sname":"\u0426\u0435\u043d\u0442\u0440","krf_id":"2662","rf_sname":"\u0421\u0442\u043e\u043b\u0438\u0447\u043d\u044b\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"11","mrf_sname":"\u0426\u0435\u043d\u0442\u0440","krf_id":"2663","rf_sname":"\u0421\u0442\u043e\u043b\u0438\u0447\u043d\u044b\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"11","mrf_sname":"\u0426\u0435\u043d\u0442\u0440","krf_id":"2664","rf_sname":"\u0421\u0442\u043e\u043b\u0438\u0447\u043d\u044b\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"11","mrf_sname":"\u0426\u0435\u043d\u0442\u0440","krf_id":"2665","rf_sname":"\u0421\u0442\u043e\u043b\u0438\u0447\u043d\u044b\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"11","mrf_sname":"\u0426\u0435\u043d\u0442\u0440","krf_id":"2666","rf_sname":"\u0421\u0442\u043e\u043b\u0438\u0447\u043d\u044b\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"11","mrf_sname":"\u0426\u0435\u043d\u0442\u0440","krf_id":"2667","rf_sname":"\u0421\u0442\u043e\u043b\u0438\u0447\u043d\u044b\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"11","mrf_sname":"\u0426\u0435\u043d\u0442\u0440","krf_id":"2668","rf_sname":"\u0421\u0442\u043e\u043b\u0438\u0447\u043d\u044b\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"11","mrf_sname":"\u0426\u0435\u043d\u0442\u0440","krf_id":"2669","rf_sname":"\u0421\u0442\u043e\u043b\u0438\u0447\u043d\u044b\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"11","mrf_sname":"\u0426\u0435\u043d\u0442\u0440","krf_id":"2670","rf_sname":"\u0421\u0442\u043e\u043b\u0438\u0447\u043d\u044b\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"11","mrf_sname":"\u0426\u0435\u043d\u0442\u0440","krf_id":"2671","rf_sname":"\u0421\u0442\u043e\u043b\u0438\u0447\u043d\u044b\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"11","mrf_sname":"\u0426\u0435\u043d\u0442\u0440","krf_id":"175","rf_sname":"\u0422\u0430\u043c\u0431\u043e\u0432\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"11","mrf_sname":"\u0426\u0435\u043d\u0442\u0440","krf_id":"167","rf_sname":"\u0422\u0432\u0435\u0440\u0441\u043a\u043e\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"11","mrf_sname":"\u0426\u0435\u043d\u0442\u0440","krf_id":"168","rf_sname":"\u0422\u0443\u043b\u044c\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"11","mrf_sname":"\u0426\u0435\u043d\u0442\u0440","krf_id":"178","rf_sname":"\u042f\u0440\u043e\u0441\u043b\u0430\u0432\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"14","mrf_sname":"\u042e\u0433","krf_id":"32","rf_sname":"\u0410\u0441\u0442\u0440\u0430\u0445\u0430\u043d\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"14","mrf_sname":"\u042e\u0433","krf_id":"29","rf_sname":"\u0412\u043e\u043b\u0433\u043e\u0433\u0440\u0430\u0434\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"14","mrf_sname":"\u042e\u0433","krf_id":"34","rf_sname":"\u0414\u0430\u0433\u0435\u0441\u0442\u0430\u043d\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"14","mrf_sname":"\u042e\u0433","krf_id":"36","rf_sname":"\u0418\u043d\u0433\u0443\u0448\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"14","mrf_sname":"\u042e\u0433","krf_id":"30","rf_sname":"\u041a\u0430\u0431\u0430\u0440\u0434\u0438\u043d\u043e-\u0411\u0430\u043b\u043a\u0430\u0440\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"14","mrf_sname":"\u042e\u0433","krf_id":"35","rf_sname":"\u041a\u0430\u043b\u043c\u044b\u0446\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"14","mrf_sname":"\u042e\u0433","krf_id":"27","rf_sname":"\u041a\u0440\u0430\u0441\u043d\u043e\u0434\u0430\u0440\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"14","mrf_sname":"\u042e\u0433","krf_id":"28","rf_sname":"\u0420\u043e\u0441\u0442\u043e\u0432\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"14","mrf_sname":"\u042e\u0433","krf_id":"31","rf_sname":"\u0421\u0435\u0432\u0435\u0440\u043e-\u041e\u0441\u0435\u0442\u0438\u043d\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"},{"mrf_id":"14","mrf_sname":"\u042e\u0433","krf_id":"33","rf_sname":"\u0421\u0442\u0430\u0432\u0440\u043e\u043f\u043e\u043b\u044c\u0441\u043a\u0438\u0439 \u0444\u0438\u043b\u0438\u0430\u043b"}]');
+var inst_call_duration = JSON.parse('[{"id":"0","name_":""},{"id":"1","name_":"0-1"},{"id":"2","name_":"1-2"},{"id":"3","name_":"2-3"},{"id":"4","name_":"3-4"},{"id":"5","name_":"4-5"},{"id":"6","name_":"5+"}]');
+
+var mrf = mrf_rf.reduce((r, i) => {
+	r[i.mrf_sname] = i.mrf_id || r[i.mrf_sname];
+	return r;
+}, {});
+
+var inst_group = inst_types.reduce((r, i) => {
+	r[i.type_name] = r[i.type_name] || [];
+	if (r[i.name_] != '') {
+		r[i.type_name].push(i);
+	}
+	return r;
+}, {});
+
+
+$('#type_group').empty();
+$('#type_id').empty();
+
+$.map(inst_group,function(item,row){
+	$('#type_group').append('<option title="" value="'+ row +'">'+ row +'</option>');
+});
+
+$('#type_group').change( function () {
+	$('#type_id').empty();
+	$('#type_id').append('<option title="" value="0"></option>');
+	$.map(inst_group[$('#type_group').val()],function(item,row){
+		$('#type_id').append('<option title="" value="'+ item.id +'">'+ item.name_ +'</option>');
+	})
+});
+
+$('#mrf_id').append('<option title="" value="-1"></option>');
+$.each(mrf, function(key, value){
+	$('#mrf_id').append('<option value='+value+'>'+key+'</option>');
+});
+$('#mrf_id').change( function () {
+	$('#rf_id').empty();
+	$('#rf_id').append('<option title="" value="-1"></option>');
+	$.each(mrf_rf, function(item, value){
+		if ($('#mrf_id').val() == value.mrf_id) {
+			$('#rf_id').append('<option title="" value="'+ value.krf_id +'">'+ value.rf_sname +'</option>');
+		}
+	});
+	localStorage.setItem('mrf_id',$('#mrf_id').val());
+});
+
+$.each(inst_call_duration, function(key, value){
+	$('#call_duration_id').append('<option value='+value.id+'>'+value.name_+'</option>');
+});
+
+$('#create_inst').on('click', function () {
+	if ($('#mrf_id').val() < 0) {
+		$(document).Toasts('create', {
+						class: 'bg-danger',
+						title: 'Уведомление',
+						position: 'topRight',
+						autohide: true,
+						delay: 3000,
+						body: 'Выберите МРФ'
+		});
+		$('#create_inst').attr('disabled', false);
+		return;
+	}
+	if ($('#rf_id').val() < 0) {
+		$(document).Toasts('create', {
+						class: 'bg-danger',
+						title: 'Уведомление',
+						position: 'topRight',
+						autohide: true,
+						delay: 3000,
+						body: 'Выберите РФ'
+		});
+		$('#create_inst').attr('disabled', false);
+		return;
+	}
+	$('#create_inst').attr('disabled', true);
+	if ($('#type_group').val() == '') {
+		$(document).Toasts('create', {
+						class: 'bg-danger',
+						title: 'Уведомление',
+						position: 'topRight',
+						autohide: true,
+						delay: 3000,
+						body: 'Выберите инициатора звонка'
+		});
+		$('#create_inst').attr('disabled', false);
+		return;
+	}
+	if ($('#type_id').val() <= 0) {
+		$(document).Toasts('create', {
+						class: 'bg-danger',
+						title: 'Уведомление',
+						position: 'topRight',
+						autohide: true,
+						delay: 3000,
+						body: 'Выберите тип проблемы'
+		});
+		$('#create_inst').attr('disabled', false);
+		return;
+	}
+	if ($('#comment_').val().length > 1000) {
+		$(document).Toasts('create', {
+						class: 'bg-danger',
+						title: 'Уведомление',
+						position: 'topRight',
+						autohide: true,
+						delay: 3000,
+						body: 'Введено больше 1000 символов'
+		});
+		$('#create_inst').attr('disabled', false);
+		return;
+	}	
+	$.ajax({
+		type: "POST",
+		dataType: 'json',
+		url: "https://ctp.rt.ru/quiz/set/create_inst_quiz",
+		data: {
+			//action : 'create_inst_quiz',
+			rf_id : $('#rf_id').val(),
+			type_id : $('#type_id').val(),
+			call_duration_id : $('#call_duration_id').val(),
+			pi_key : $('#pi_key').val(),
+			comment_ : $('#comment_').val(),
+		},
+		success: function (data) {
+			$(document).Toasts('create', {
+				class:(data['code'] === 200 ? 'bg-success' :'bg-danger'),
+				title: 'Уведомление',
+				position: 'topRight',
+				autohide: true,
+				delay: 5000,
+				body: data['message']
+			});
+			if (data['code'] === 200) {
+				$('#type_id').val(0);
+				$('#type_group').val(0);
+				$('#rf_id').val(0);
+				$('#call_duration_id').val(0);
+				$('#pi_key').val('');
+				$('#comment_').val('');
+			}
+			$('#create_inst').attr('disabled', false);
+		},
+		error: function (data) {
+			$(document).Toasts('create', {
+				class: 'bg-danger',
+				title: 'Уведомление',
+				position: 'topRight',
+				autohide: true,
+				delay: 3000,
+				body: "Сервер отклонил запрос"
+			});
+			$('#create_inst').attr('disabled', false);
+		}
+	});
+
+});
+if (localStorage.mrf_id) {
+	$('#mrf_id').val(localStorage.mrf_id);
+	$('#mrf_id').trigger("change");
+}
+</script>
+<style>
+.content_modal {
+	//font-family:BasisGrotesquePro;
+	width:600px!important;max-width:600px!important;
+	height:320px!important;max-height:320px!important;
+	//background:#fff!important;
+	//line-height:1.05!important;
+}
+td,th {
+	overflow:hidden;
+	vertical-align:middle !important;
+	font-size:9pt;
+}
+.tablesorter-header .tablesorter-icon {
+    background-image: url(data:image/gif;base64,R0lGODlhFQAJAIAAACMtMP///yH5BAEAAAEALAAAAAAVAAkAAAIXjI+AywnaYnhUMoqt3gZXPmVg94yJVQAAOw==);
+    background-position: center right;
+    background-repeat: no-repeat;
+    cursor: pointer;
+    white-space: normal;
+    padding: 4px 20px 4px 4px;
+}
+.tablesorter-headerAsc .tablesorter-icon {
+    background-image: url(data:image/gif;base64,R0lGODlhFQAEAIAAACMtMP///yH5BAEAAAEALAAAAAAVAAQAAAINjI8Bya2wnINUMopZAQA7);
+}
+.tablesorter-headerDesc .tablesorter-icon {
+    background-image: url(data:image/gif;base64,R0lGODlhFQAEAIAAACMtMP///yH5BAEAAAEALAAAAAAVAAQAAAINjB+gC+jP2ptn0WskLQA7);
+}
+.tablesorter .tablesorter-icon .sorter-false {
+    background-image: none;
+    cursor: default;
+    padding: 4px;
+}
+</style>
+</div>
+<!-- /.wrapper -->
+<!-- .footer -->
+<footer class="main-footer">
+	<div class="float-right d-none d-sm-inline-block">
+		<strong>2022-2025</strong>
+	</div>
+</footer>
+<!-- /.footer -->
+</body>
+</html>
