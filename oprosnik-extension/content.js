@@ -1,31 +1,34 @@
-console.log("Sidebar control script v1.5 (Event-based) loaded!");
+console.log("Sidebar control script v1.6 (Correct approach) loaded!");
 
 /**
- * This is the correct approach. Instead of fighting the page's CSS and JS,
- * we will trigger the page's own functionality.
- * The page has a link with a 'data-widget="pushmenu"' attribute that handles
- * collapsing and expanding the sidebar correctly. We will simulate a click on it.
+ * This function finds the page's own sidebar toggle button
+ * and simulates a click on it. This is the most reliable method
+ * as it uses the page's built-in JavaScript to correctly
+ * handle all layout changes.
  */
 function toggleSidebar() {
-  // Find the specific 'a' tag that controls the sidebar.
+  // Find the button by its unique attribute: 'data-widget="pushmenu"'
   const sidebarButton = document.querySelector('a[data-widget="pushmenu"]');
 
   if (sidebarButton) {
-    // Programmatically click the button.
+    // Simulate a user click
     sidebarButton.click();
-    console.log('Successfully triggered the pushmenu widget.');
-    return "Toggled sidebar via page's own script.";
+    console.log("Successfully triggered the page's own sidebar script.");
+    return "Toggle command sent successfully.";
   } else {
-    console.error('Could not find the sidebar toggle button (a[data-widget="pushmenu"]).');
-    return "Error: Button not found.";
+    // This message will appear if the button isn't found
+    console.error("Error: Could not find the sidebar toggle button.");
+    return "Error: Sidebar button not found on the page.";
   }
 }
 
-// Listen for the message from the popup.
+// Listen for the message from the popup to run our function
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "toggle_sidebar") {
     const status = toggleSidebar();
+    // Send a response back to the popup
     sendResponse({ status: status });
   }
-  return true; // Keep the message channel open for the response.
+  // Return true to indicate you wish to send a response asynchronously
+  return true;
 });
