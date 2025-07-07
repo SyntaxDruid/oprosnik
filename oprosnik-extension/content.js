@@ -1,37 +1,23 @@
-console.log("Sidebar control script v2.8 loaded!");
+console.log("Form modification script v2.9 loaded!");
 
-// --- Логика для сайдбара (остается без изменений) ---
-const aggressiveCSS = `
-  /* Принудительно скрываем сайдбар */
-  .sidebar-hidden .main-sidebar {
+// --- Постоянный CSS для скрытия сайдбара и исправления отступа ---
+const permanentCSS = `
+  /* Полностью и навсегда скрываем сайдбар */
+  .main-sidebar {
     display: none !important;
-    width: 0 !important;
   }
 
-  /* КРИТИЧНО: Убираем отступ слева у всех основных контейнеров */
-  .sidebar-hidden .content-wrapper,
-  .sidebar-hidden .main-header,
-  .sidebar-hidden .main-footer {
+  /* Принудительно убираем левый отступ у всех основных контейнеров */
+  .content-wrapper,
+  .main-header,
+  .main-footer {
     margin-left: 0 !important;
-  }
-
-  /* Убираем все transitions чтобы избежать визуальных артефактов */
-  .sidebar-hidden .content-wrapper,
-  .sidebar-hidden .main-header,
-  .sidebar-hidden .main-footer {
-    transition: none !important;
   }
 `;
 const styleSheet = document.createElement("style");
-styleSheet.innerText = aggressiveCSS;
+styleSheet.innerText = permanentCSS;
 document.head.appendChild(styleSheet);
 
-function toggleSidebar() {
-  document.body.classList.toggle('sidebar-hidden');
-  const isHidden = document.body.classList.contains('sidebar-hidden');
-  console.log(`Toggled class. Sidebar is now ${isHidden ? 'hidden' : 'visible'}.`);
-  return isHidden ? 'hidden' : 'visible';
-}
 
 // --- Логика для скрытия и модификации элементов формы ---
 
@@ -47,7 +33,7 @@ function hideCallDurationElement() {
       console.log('Элемент "Длительность звонка" был успешно скрыт.');
     }
   } else {
-    console.log('Элемент "Длительность звонка" не найден на этой странице.');
+    // console.log('Элемент "Длительность звонка" не найден на этой странице.');
   }
 }
 
@@ -67,18 +53,16 @@ function removeSpecificOptions(selectors) {
           const optionToRemove = selectElement.querySelector(`option[value="${value}"]`);
           if (optionToRemove) {
             optionToRemove.remove();
-            console.log(`Элемент <option> с value="${value}" удален из select#${selectId}.`);
+            // console.log(`Элемент <option> с value="${value}" удален из select#${selectId}.`);
           }
         });
-      } else {
-        // Не выводим ошибку, т.к. элемент может еще не существовать
       }
     }
   }
 }
 
 
-// --- Обработчики сообщений и вызовы функций ---
+// --- Вызовы функций ---
 
 // Вызываем функции для модификации формы сразу после загрузки скрипта.
 hideCallDurationElement();
@@ -86,25 +70,13 @@ hideCallDurationElement();
 // Определяем, какие опции и из каких селекторов нужно удалить.
 const optionsToRemove = {
   'type_group': ['КДГ 1 ЛТП'], // Статическое удаление
-  'type_id': ['0', '333', '42', '400']  // Список для динамического удаления
+  'type_id': ['333', '42', '400']  // Список для динамического удаления
 };
 
 // Вызываем удаление для статичных селектов, которые не меняются.
-removeSpecificOptions(optionsToRemove);
+removeSpecificOptions({ 'type_group': optionsToRemove.type_group });
 
 // Для динамически изменяемых списков, запускаем периодическую проверку.
-// Это менее эффективно, чем MutationObserver, но может быть более надежным
-// для обработки сложных динамических изменений на странице.
 setInterval(() => {
-  removeSpecificOptions(optionsToRemove);
+  removeSpecificOptions({ 'type_id': optionsToRemove.type_id });
 }, 300); // Проверяем и удаляем каждые 300 миллисекунд.
-
-
-// Слушаем сообщения от popup для управления сайдбаром.
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === "toggle_sidebar") {
-    const currentState = toggleSidebar();
-    sendResponse({ status: `Sidebar is now ${currentState}` });
-  }
-  return true;
-});
