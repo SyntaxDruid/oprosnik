@@ -27,7 +27,7 @@
     {
       "matches": ["https://ctp.rt.ru/quiz*"],
       "js": ["scripts/filler.js"],
-      "css": ["css/style.css"]
+      "css": ["css/style.css", "css/sidebar-hider.css"]
     },
     {
       "matches": ["https://ssial000ap008.si.rt.ru:8445/desktop/container/?locale=ru_RU*"],

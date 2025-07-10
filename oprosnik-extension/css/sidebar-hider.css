@@ -1,0 +1,41 @@
+/*
+ * sidebar-hider.css
+ * Стили для управления макетом и кастомной кнопкой.
+ */
+
+/* Стили для управления макетом страницы */
+/* Активируются, когда на тег <body> добавляется наш класс 'sidebar-hidden-by-extension' */
+
+/* Критически важное правило: убираем левый отступ у контента и хедера */
+.sidebar-hidden-by-extension .content-wrapper,
+.sidebar-hidden-by-extension .main-header,
+.sidebar-hidden-by-extension .main-footer {
+  margin-left: 0 !important;
+  transition: none !important; /* Отключаем анимацию, чтобы избежать артефактов */
+}
+
+/* Полностью скрываем сам сайдбар, а не просто сворачиваем его */
+.sidebar-hidden-by-extension .main-sidebar {
+  display: none !important;
+}
+
+/* Стили для нашей новой кнопки */
+.oprosnik-helper-btn {
+  /* Расположение и базовые стили */
+  margin-left: 15px;
+  font-weight: bold;
+  color: #fff;
+  background-color: #28a745; /* Зеленый цвет для наглядности */
+  border-color: #28a745;
+  
+  /* Добавляем немного магии, чтобы кнопка выглядела живой */
+  transition: background-color 0.2s ease-in-out, transform 0.1s ease;
+}
+
+.oprosnik-helper-btn:hover {
+  filter: brightness(1.1);
+}
+
+.oprosnik-helper-btn:active {
+  transform: scale(0.98);
+}
