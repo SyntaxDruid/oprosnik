@@ -1,0 +1,8 @@
+Oprosnik Helper: Sidebar Hider Script v4.1 Loaded.
+form-modifier.js:8 Oprosnik Helper: Form Modifier Script v4.2 Loaded.
+form-modifier.js:19 Ёлемент "ƒлительность звонка" был успешно скрыт.
+filler.js:9 Oprosnik Helper: Filler Script Injected.
+filler.js:34 Filler:  нопка "¬ставить данные о звонке" успешно добавлена.
+filler.js:41 Filler:  нопка нажата. ќтправл€ю запрос на получение данных...
+filler.js:49 Uncaught TypeError: Cannot read properties of undefined (reading 'sendMessage')
+    at HTMLButtonElement.handlePasteButtonClick (filler.js:49:18)
