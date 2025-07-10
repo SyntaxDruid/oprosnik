@@ -1,13 +1,12 @@
 {
   "manifest_version": 3,
-  "name": "Page Helper",
+  "name": "Oprosnik Helper",
   "version": "3.0",
-  "description": "RTK Oprosnik Extension",
+  "description": "Помогает с заполнением опросника, копирует данные из файнес.",
   "permissions": [
-    "activeTab",
-    "scripting",
+    "storage",
     "tabs",
-    "storage"
+    "scripting"
   ],
   "host_permissions": [
     "https://ctp.rt.ru/*",
@@ -16,25 +15,28 @@
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
-      "16": "images/icon16.png",
-      "48": "images/icon48.png",
-      "128": "images/icon128.png"
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
     }
+  },
+  "background": {
+    "service_worker": "background.js"
   },
   "content_scripts": [
     {
-      "matches": ["https://ctp.rt.ru/*"],
-      "js": ["content.js"]
-
+      "matches": ["https://ctp.rt.ru/quiz*"],
+      "js": ["scripts/filler.js"],
+      "css": ["css/style.css"]
     },
     {
-      "matches": ["https://ssial000ap008.si.rt.ru:8445/*"],
-      "js": ["content.js"]
+      "matches": ["https://ssial000ap008.si.rt.ru:8445/desktop/container/?locale=ru_RU*"],
+      "js": ["scripts/parser.js"]
     }
   ],
   "icons": {
-    "16": "images/icon16.png",
-    "48": "images/icon48.png",
-    "128": "images/icon128.png"
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
   }
 }
