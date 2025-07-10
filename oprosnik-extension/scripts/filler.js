@@ -86,7 +86,6 @@ function safeSendMessage(message, callback) {
 function createPasteButton() {
     console.log('🔍 Поиск места для размещения кнопки...');
     
-    // Пробуем найти кнопку несколько раз с задержкой
     let attempts = 0;
     const maxAttempts = 10;
     
@@ -97,44 +96,37 @@ function createPasteButton() {
         if (!targetButton) {
             console.log(`⏳ Попытка ${attempts}/${maxAttempts}: Кнопка "Ответить" не найдена`);
             
-            if (attempts < maxAttempts) {
-                setTimeout(tryCreateButton, 500);
-            } else {
-                console.error('❌ Не удалось найти кнопку "Ответить" после', maxAttempts, 'попыток');
-                showDiagnosticInfo();
+            // Пробуем найти альтернативные селекторы
+            const alternativeSelectors = [
+                'button[type="submit"]',
+                'input[type="submit"][value*="Ответить"]',
+                '.btn-primary:contains("Ответить")',
+                'button.btn:contains("Ответить")'
+            ];
+            
+            let found = false;
+            for (const selector of alternativeSelectors) {
+                try {
+                    const altButton = document.querySelector(selector);
+                    if (altButton && altButton.innerText?.includes('Ответить')) {
+                        console.log(`✅ Найдена кнопка по альтернативному селектору: ${selector}`);
+                        targetButton = altButton;
+                        found = true;
+                        break;
+                    }
+                } catch (e) {}
             }
-            return;
+            
+            if (!found) {
+                if (attempts < maxAttempts) {
+                    setTimeout(tryCreateButton, 500);
+                } else {
+                    console.error('❌ Не удалось найти кнопку "Ответить" после', maxAttempts, 'попыток');
+                    showDiagnosticInfo();
+                }
+                return;
+            }
         }
-
-        // Проверяем, не добавлена ли уже наша кнопка
-        if (document.querySelector('.oprosnik-helper-btn')) {
-            console.log('⚠️ Кнопка уже существует, пропускаем создание');
-            return;
-        }
-
-        // Создаем нашу новую кнопку
-        const pasteButton = document.createElement('button');
-        pasteButton.innerText = 'Вставить данные о звонке';
-        pasteButton.type = 'button';
-        pasteButton.className = 'btn btn-success ml-2 oprosnik-helper-btn';
-        
-        // Добавляем data-атрибуты для диагностики
-        pasteButton.setAttribute('data-extension-id', chrome.runtime?.id || 'unknown');
-        pasteButton.setAttribute('data-version', '2.0');
-
-        // Добавляем обработчик клика
-        pasteButton.addEventListener('click', handlePasteButtonClick);
-
-        // Вставляем нашу кнопку на страницу после целевой кнопки
-        targetButton.insertAdjacentElement('afterend', pasteButton);
-        console.log('✅ Кнопка "Вставить данные о звонке" успешно добавлена');
-        
-        // Добавляем индикатор статуса API
-        addStatusIndicator();
-    };
-    
-    tryCreateButton();
-}
 
 /**
  * Добавляет визуальный индикатор статуса API
