@@ -28,7 +28,8 @@
       "matches": ["https://ctp.rt.ru/quiz*"],
       "js": [
         "scripts/sidebar-hider.js",
-        "scripts/form-modifier.js"
+        "scripts/form-modifier.js",
+        "scripts/filler.js"
       ],
       "css": [
         "css/sidebar-hider.css",
