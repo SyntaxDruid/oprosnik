@@ -1,6 +1,6 @@
 /**
- * filler.js - Улучшенная версия с диагностикой
- * Версия: 2.0
+ * filler.js - Полная обновленная версия
+ * Версия: 2.1
  * 
  * Работает на странице опросника.
  * 1. Добавляет кнопку "Вставить данные о звонке".
@@ -8,7 +8,6 @@
  * 3. Получив данные, форматирует их и вставляет в поле "Комментарий".
  */
 
-// ===== ДИАГНОСТИКА И ИНИЦИАЛИЗАЦИЯ =====
 console.log('🚀 Oprosnik Helper: Filler Script начинает загрузку...', {
     timestamp: new Date().toISOString(),
     url: window.location.href,
@@ -78,8 +77,6 @@ function safeSendMessage(message, callback) {
     }
 }
 
-// ===== ОСНОВНАЯ ЛОГИКА =====
-
 /**
  * Главная функция, которая создает и настраивает кнопку.
  */
@@ -91,7 +88,7 @@ function createPasteButton() {
     
     const tryCreateButton = () => {
         attempts++;
-        const targetButton = document.getElementById('create_inst');
+        let targetButton = document.getElementById('create_inst');
         
         if (!targetButton) {
             console.log(`⏳ Попытка ${attempts}/${maxAttempts}: Кнопка "Ответить" не найдена`);
@@ -99,25 +96,30 @@ function createPasteButton() {
             // Пробуем найти альтернативные селекторы
             const alternativeSelectors = [
                 'button[type="submit"]',
-                'input[type="submit"][value*="Ответить"]',
-                '.btn-primary:contains("Ответить")',
-                'button.btn:contains("Ответить")'
+                'input[type="submit"]',
+                '.btn-primary',
+                'button.btn'
             ];
             
             let found = false;
             for (const selector of alternativeSelectors) {
                 try {
-                    const altButton = document.querySelector(selector);
-                    if (altButton && altButton.innerText?.includes('Ответить')) {
-                        console.log(`✅ Найдена кнопка по альтернативному селектору: ${selector}`);
-                        targetButton = altButton;
-                        found = true;
-                        break;
+                    const buttons = document.querySelectorAll(selector);
+                    for (const btn of buttons) {
+                        if (btn.innerText && btn.innerText.includes('Ответить')) {
+                            console.log(`✅ Найдена кнопка по альтернативному селектору: ${selector}`);
+                            targetButton = btn;
+                            found = true;
+                            break;
+                        }
                     }
-                } catch (e) {}
+                    if (found) break;
+                } catch (e) {
+                    console.error('Ошибка при поиске по селектору:', selector, e);
+                }
             }
             
-            if (!found) {
+            if (!targetButton) {
                 if (attempts < maxAttempts) {
                     setTimeout(tryCreateButton, 500);
                 } else {
@@ -127,6 +129,98 @@ function createPasteButton() {
                 return;
             }
         }
+
+        // Более точная проверка существования кнопки
+        const nearbyButtons = targetButton.parentElement ? 
+            targetButton.parentElement.querySelectorAll('.oprosnik-helper-btn') : [];
+        
+        let validButtonExists = false;
+        nearbyButtons.forEach(btn => {
+            if (btn.tagName === 'BUTTON' && btn.innerText.includes('Вставить данные')) {
+                validButtonExists = true;
+                console.log('✅ Наша кнопка уже существует и работает');
+            } else {
+                console.log('🔧 Удаляем невалидный элемент:', btn);
+                btn.remove();
+            }
+        });
+        
+        if (validButtonExists) {
+            return;
+        }
+
+        // Создаем нашу новую кнопку
+        const pasteButton = document.createElement('button');
+        pasteButton.innerText = 'Вставить данные о звонке';
+        pasteButton.type = 'button';
+        pasteButton.className = 'btn btn-success ml-2 oprosnik-helper-btn';
+        
+        // Добавляем стили для гарантии видимости
+        pasteButton.style.cssText = 'margin-left: 10px !important; display: inline-block !important; visibility: visible !important; opacity: 1 !important;';
+        
+        // Добавляем data-атрибуты для диагностики
+        pasteButton.setAttribute('data-extension-id', chrome.runtime?.id || 'unknown');
+        pasteButton.setAttribute('data-version', '2.1');
+        pasteButton.setAttribute('data-created-at', new Date().toISOString());
+
+        // Добавляем обработчик клика
+        pasteButton.addEventListener('click', handlePasteButtonClick);
+
+        // Определяем, куда вставить кнопку
+        let inserted = false;
+        
+        // Стратегия 1: После целевой кнопки
+        try {
+            targetButton.insertAdjacentElement('afterend', pasteButton);
+            inserted = true;
+            console.log('✅ Кнопка вставлена после целевой кнопки');
+        } catch (e) {
+            console.warn('⚠️ Не удалось вставить после кнопки:', e);
+        }
+        
+        // Стратегия 2: В родительский контейнер
+        if (!inserted && targetButton.parentElement) {
+            try {
+                targetButton.parentElement.appendChild(pasteButton);
+                inserted = true;
+                console.log('✅ Кнопка добавлена в родительский контейнер');
+            } catch (e) {
+                console.warn('⚠️ Не удалось добавить в контейнер:', e);
+            }
+        }
+        
+        // Стратегия 3: В форму
+        if (!inserted) {
+            const form = document.querySelector('form');
+            if (form) {
+                const actionsDiv = form.querySelector('.form-actions') || form.querySelector('.btn-group') || form;
+                actionsDiv.appendChild(pasteButton);
+                inserted = true;
+                console.log('✅ Кнопка добавлена в форму');
+            }
+        }
+        
+        if (inserted) {
+            console.log('✅ Кнопка "Вставить данные о звонке" успешно добавлена');
+            
+            // Проверяем, что кнопка действительно видима
+            setTimeout(() => {
+                if (pasteButton.offsetParent === null) {
+                    console.error('⚠️ Кнопка добавлена, но не видима! Проверьте CSS.');
+                } else {
+                    console.log('✅ Кнопка видима и готова к использованию');
+                }
+            }, 100);
+            
+            // Добавляем индикатор статуса API
+            addStatusIndicator();
+        } else {
+            console.error('❌ Не удалось добавить кнопку ни одним способом');
+        }
+    };
+    
+    tryCreateButton();
+}
 
 /**
  * Добавляет визуальный индикатор статуса API
@@ -230,27 +324,30 @@ function handlePasteButtonClick(event) {
 function pasteDataIntoComment(callData) {
     console.log('📝 Вставка данных в комментарий...');
     
-    const commentTextarea = document.getElementById('comment_');
+    let commentTextarea = document.getElementById('comment_');
     if (!commentTextarea) {
         console.error('❌ Не найдено поле для комментария (#comment_)');
         // Пробуем найти по другим селекторам
         const alternativeSelectors = [
             'textarea[name="comment"]',
             'textarea[id*="comment"]',
-            '.form-control[placeholder*="комментарий"]'
+            '.form-control[placeholder*="комментарий"]',
+            'textarea.form-control'
         ];
         
         for (const selector of alternativeSelectors) {
             const element = document.querySelector(selector);
             if (element) {
                 console.log('✅ Найдено альтернативное поле:', selector);
-                insertDataIntoField(element, callData);
-                return;
+                commentTextarea = element;
+                break;
             }
         }
         
-        alert('Ошибка: Не найдено поле для вставки комментария');
-        return;
+        if (!commentTextarea) {
+            alert('Ошибка: Не найдено поле для вставки комментария');
+            return;
+        }
     }
     
     insertDataIntoField(commentTextarea, callData);
@@ -306,6 +403,33 @@ function showDiagnosticInfo() {
     console.groupEnd();
 }
 
+/**
+ * Дополнительная функция для принудительного пересоздания кнопки
+ * Можно вызвать из консоли: recreateHelperButton()
+ */
+window.recreateHelperButton = function() {
+    console.log('🔄 Принудительное пересоздание кнопки...');
+    
+    // Удаляем все существующие кнопки
+    document.querySelectorAll('.oprosnik-helper-btn').forEach(btn => {
+        console.log('🗑️ Удаляем:', btn);
+        btn.remove();
+    });
+    
+    // Пересоздаем
+    createPasteButton();
+};
+
+// Добавляем глобальную функцию для отладки
+window.debugOprosnikHelper = function() {
+    console.group('🐛 Debug Oprosnik Helper');
+    console.log('Кнопка "Ответить":', document.getElementById('create_inst'));
+    console.log('Наша кнопка:', document.querySelector('.oprosnik-helper-btn'));
+    console.log('Chrome API:', typeof chrome !== 'undefined' && chrome.runtime);
+    console.log('Extension ID:', chrome.runtime?.id);
+    console.groupEnd();
+};
+
 // ===== ЗАПУСК =====
 console.log('🏁 Инициализация расширения...');
 
@@ -323,11 +447,6 @@ if (document.readyState === 'loading') {
 } else {
     console.log('✅ DOM уже загружен');
     createPasteButton();
-}
-
-// Добавляем слушатель для отладки всех сообщений
-if (messageAPI) {
-    console.log('🎧 Установка слушателя сообщений для отладки...');
 }
 
 console.log('✅ Oprosnik Helper: Filler Script полностью загружен');
