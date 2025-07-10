@@ -1,73 +1,234 @@
 /**
- * filler.js
+ * filler.js - Улучшенная версия с диагностикой
+ * Версия: 2.0
+ * 
  * Работает на странице опросника.
  * 1. Добавляет кнопку "Вставить данные о звонке".
  * 2. По клику на кнопку инициирует процесс получения данных.
  * 3. Получив данные, форматирует их и вставляет в поле "Комментарий".
  */
 
-console.log('Oprosnik Helper: Filler Script Injected.');
+// ===== ДИАГНОСТИКА И ИНИЦИАЛИЗАЦИЯ =====
+console.log('🚀 Oprosnik Helper: Filler Script начинает загрузку...', {
+    timestamp: new Date().toISOString(),
+    url: window.location.href,
+    readyState: document.readyState
+});
+
+// Проверка доступности Chrome API
+const diagnostics = {
+    chromeAvailable: typeof chrome !== 'undefined',
+    runtimeAvailable: typeof chrome !== 'undefined' && chrome.runtime,
+    sendMessageAvailable: typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage,
+    browserAvailable: typeof browser !== 'undefined',
+    inIframe: window !== window.top,
+    protocol: window.location.protocol,
+    contentScriptContext: typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id
+};
+
+console.log('📊 Диагностика окружения:', diagnostics);
+
+// Глобальная переменная для хранения API
+let messageAPI = null;
+
+// Инициализация API для обмена сообщениями
+function initializeMessageAPI() {
+    if (diagnostics.sendMessageAvailable) {
+        messageAPI = chrome.runtime;
+        console.log('✅ Chrome API доступен и инициализирован');
+        return true;
+    } else if (diagnostics.browserAvailable && browser.runtime && browser.runtime.sendMessage) {
+        messageAPI = browser.runtime;
+        console.log('✅ Browser API (Firefox) доступен и инициализирован');
+        return true;
+    } else {
+        console.error('❌ API расширения недоступен!');
+        return false;
+    }
+}
+
+// Безопасная отправка сообщений
+function safeSendMessage(message, callback) {
+    if (!messageAPI) {
+        console.error('❌ Message API не инициализирован');
+        callback({ status: 'error', message: 'API расширения недоступен' });
+        return;
+    }
+
+    try {
+        console.log('📤 Отправка сообщения:', message);
+        messageAPI.sendMessage(message, (response) => {
+            if (messageAPI.lastError) {
+                console.error('❌ Ошибка при отправке:', messageAPI.lastError);
+                callback({ 
+                    status: 'error', 
+                    message: messageAPI.lastError.message || 'Неизвестная ошибка' 
+                });
+            } else {
+                console.log('📥 Получен ответ:', response);
+                callback(response);
+            }
+        });
+    } catch (error) {
+        console.error('❌ Исключение при отправке сообщения:', error);
+        callback({ 
+            status: 'error', 
+            message: 'Ошибка выполнения: ' + error.message 
+        });
+    }
+}
+
+// ===== ОСНОВНАЯ ЛОГИКА =====
 
 /**
  * Главная функция, которая создает и настраивает кнопку.
  */
 function createPasteButton() {
-  // Находим элемент, после которого мы вставим нашу кнопку.
-  // В данном случае, это кнопка "Ответить".
-  const targetButton = document.getElementById('create_inst');
-  if (!targetButton) {
-    console.error('Filler: Не найдена кнопка "Ответить" для размещения новой кнопки.');
-    return;
-  }
+    console.log('🔍 Поиск места для размещения кнопки...');
+    
+    // Пробуем найти кнопку несколько раз с задержкой
+    let attempts = 0;
+    const maxAttempts = 10;
+    
+    const tryCreateButton = () => {
+        attempts++;
+        const targetButton = document.getElementById('create_inst');
+        
+        if (!targetButton) {
+            console.log(`⏳ Попытка ${attempts}/${maxAttempts}: Кнопка "Ответить" не найдена`);
+            
+            if (attempts < maxAttempts) {
+                setTimeout(tryCreateButton, 500);
+            } else {
+                console.error('❌ Не удалось найти кнопку "Ответить" после', maxAttempts, 'попыток');
+                showDiagnosticInfo();
+            }
+            return;
+        }
 
-  // Создаем нашу новую кнопку
-  const pasteButton = document.createElement('button');
-  pasteButton.innerText = 'Вставить данные о звонке';
-  pasteButton.type = 'button'; // Важно, чтобы не отправлять форму
-  pasteButton.className = 'btn btn-success ml-2 oprosnik-helper-btn'; // Используем классы страницы + свой
+        // Проверяем, не добавлена ли уже наша кнопка
+        if (document.querySelector('.oprosnik-helper-btn')) {
+            console.log('⚠️ Кнопка уже существует, пропускаем создание');
+            return;
+        }
 
-  // Добавляем обработчик клика
-  pasteButton.addEventListener('click', handlePasteButtonClick);
+        // Создаем нашу новую кнопку
+        const pasteButton = document.createElement('button');
+        pasteButton.innerText = 'Вставить данные о звонке';
+        pasteButton.type = 'button';
+        pasteButton.className = 'btn btn-success ml-2 oprosnik-helper-btn';
+        
+        // Добавляем data-атрибуты для диагностики
+        pasteButton.setAttribute('data-extension-id', chrome.runtime?.id || 'unknown');
+        pasteButton.setAttribute('data-version', '2.0');
 
-  // Вставляем нашу кнопку на страницу после целевой кнопки
-  targetButton.insertAdjacentElement('afterend', pasteButton);
-  console.log('Filler: Кнопка "Вставить данные о звонке" успешно добавлена.');
+        // Добавляем обработчик клика
+        pasteButton.addEventListener('click', handlePasteButtonClick);
+
+        // Вставляем нашу кнопку на страницу после целевой кнопки
+        targetButton.insertAdjacentElement('afterend', pasteButton);
+        console.log('✅ Кнопка "Вставить данные о звонке" успешно добавлена');
+        
+        // Добавляем индикатор статуса API
+        addStatusIndicator();
+    };
+    
+    tryCreateButton();
+}
+
+/**
+ * Добавляет визуальный индикатор статуса API
+ */
+function addStatusIndicator() {
+    const button = document.querySelector('.oprosnik-helper-btn');
+    if (!button) return;
+    
+    const indicator = document.createElement('span');
+    indicator.style.cssText = 'margin-left: 5px; font-size: 12px;';
+    
+    if (messageAPI) {
+        indicator.innerHTML = '🟢';
+        indicator.title = 'API доступен';
+    } else {
+        indicator.innerHTML = '🔴';
+        indicator.title = 'API недоступен';
+    }
+    
+    button.appendChild(indicator);
 }
 
 /**
  * Обработчик нажатия на нашу кнопку.
  */
-function handlePasteButtonClick() {
-  console.log('Filler: Кнопка нажата. Отправляю запрос на получение данных...');
-  
-  // Показываем пользователю, что идет процесс
-  const button = document.querySelector('.oprosnik-helper-btn');
-  button.innerText = 'Получение данных...';
-  button.disabled = true;
-
-  // Отправляем сообщение в background.js с запросом данных
-  chrome.runtime.sendMessage({ action: 'getCallData' }, (response) => {
-    if (chrome.runtime.lastError) {
-      console.error('Filler: Ошибка связи с background.js:', chrome.runtime.lastError.message);
-      alert('Ошибка: Не удалось связаться с расширением. Попробуйте перезагрузить страницу.');
-      resetButtonState(button);
-      return;
+function handlePasteButtonClick(event) {
+    console.log('🖱️ Кнопка нажата', {
+        timestamp: new Date().toISOString(),
+        apiAvailable: !!messageAPI
+    });
+    
+    const button = event.target.closest('.oprosnik-helper-btn');
+    
+    // Проверяем инициализацию API
+    if (!messageAPI && !initializeMessageAPI()) {
+        console.error('❌ Не удалось инициализировать API');
+        alert('Ошибка: API расширения недоступен.\n\nВозможные причины:\n' +
+              '1. Расширение не установлено или отключено\n' +
+              '2. Страница требует перезагрузки\n' +
+              '3. Конфликт с другими расширениями\n\n' +
+              'Попробуйте перезагрузить страницу (F5)');
+        return;
     }
+    
+    // Показываем пользователю, что идет процесс
+    const originalText = button.innerText;
+    button.innerText = 'Получение данных...';
+    button.disabled = true;
 
-    if (response && response.status === 'success') {
-      console.log('Filler: Данные успешно получены:', response.data);
-      pasteDataIntoComment(response.data);
-      button.innerText = 'Данные вставлены!';
-      // Возвращаем кнопку в исходное состояние через 2 секунды
-      setTimeout(() => resetButtonState(button), 2000);
+    // Отправляем сообщение в background.js с запросом данных
+    safeSendMessage({ action: 'getCallData' }, (response) => {
+        console.log('📨 Обработка ответа:', response);
+        
+        if (response && response.status === 'success') {
+            console.log('✅ Данные успешно получены:', response.data);
+            pasteDataIntoComment(response.data);
+            button.innerText = 'Данные вставлены!';
+            button.style.backgroundColor = '#28a745';
+            
+            // Возвращаем кнопку в исходное состояние через 2 секунды
+            setTimeout(() => {
+                button.innerText = originalText;
+                button.disabled = false;
+                button.style.backgroundColor = '';
+            }, 2000);
 
-    } else {
-      // Если произошла ошибка (например, вкладка-источник не найдена)
-      console.error('Filler: Ошибка при получении данных:', response.message);
-      alert(`Ошибка: ${response.message}`);
-      resetButtonState(button);
-    }
-  });
+        } else {
+            // Если произошла ошибка
+            const errorMessage = response?.message || 'Неизвестная ошибка';
+            console.error('❌ Ошибка при получении данных:', errorMessage);
+            
+            // Детальное сообщение об ошибке
+            let userMessage = 'Ошибка: ' + errorMessage;
+            
+            if (errorMessage.includes('Вкладка-источник не найдена')) {
+                userMessage += '\n\nУбедитесь, что открыта вкладка Cisco Finesse:\n' +
+                              'https://ssial000ap008.si.rt.ru:8445/desktop/container/';
+            } else if (errorMessage.includes('Данные о последнем завершенном звонке еще не были зафиксированы')) {
+                userMessage += '\n\nСначала завершите звонок в Cisco Finesse,\n' +
+                              'затем попробуйте снова.';
+            }
+            
+            alert(userMessage);
+            
+            button.innerText = 'Ошибка!';
+            button.style.backgroundColor = '#dc3545';
+            
+            setTimeout(() => {
+                button.innerText = originalText;
+                button.disabled = false;
+                button.style.backgroundColor = '';
+            }, 2000);
+        }
+    });
 }
 
 /**
@@ -75,44 +236,106 @@ function handlePasteButtonClick() {
  * @param {object} callData - Объект с данными о звонке.
  */
 function pasteDataIntoComment(callData) {
-  const commentTextarea = document.getElementById('comment_');
-  if (!commentTextarea) {
-    console.error('Filler: Не найдено поле для комментария (#comment_).');
-    return;
-  }
+    console.log('📝 Вставка данных в комментарий...');
+    
+    const commentTextarea = document.getElementById('comment_');
+    if (!commentTextarea) {
+        console.error('❌ Не найдено поле для комментария (#comment_)');
+        // Пробуем найти по другим селекторам
+        const alternativeSelectors = [
+            'textarea[name="comment"]',
+            'textarea[id*="comment"]',
+            '.form-control[placeholder*="комментарий"]'
+        ];
+        
+        for (const selector of alternativeSelectors) {
+            const element = document.querySelector(selector);
+            if (element) {
+                console.log('✅ Найдено альтернативное поле:', selector);
+                insertDataIntoField(element, callData);
+                return;
+            }
+        }
+        
+        alert('Ошибка: Не найдено поле для вставки комментария');
+        return;
+    }
+    
+    insertDataIntoField(commentTextarea, callData);
+}
 
-  // Форматируем данные в красивую строку для вставки
-  const formattedData = `
---------------------------------
+/**
+ * Вставляет данные в указанное поле
+ */
+function insertDataIntoField(field, callData) {
+    // Форматируем данные в красивую строку для вставки
+    const formattedData = `--------------------------------
 Данные о последнем звонке:
 - Номер телефона: ${callData.phone}
 - Длительность: ${callData.duration}
 - Регион: ${callData.region}
 - Время фиксации: ${callData.capturedAt}
---------------------------------
-  `;
+--------------------------------`;
 
-  // Вставляем отформатированные данные в начало комментария,
-  // не затирая то, что пользователь мог уже ввести.
-  commentTextarea.value = formattedData.trim() + '\n\n' + commentTextarea.value;
+    // Сохраняем текущее значение
+    const currentValue = field.value;
+    
+    // Вставляем отформатированные данные в начало комментария
+    field.value = formattedData.trim() + '\n\n' + currentValue;
+    
+    // Фокусируемся на поле и устанавливаем курсор в конец
+    field.focus();
+    field.setSelectionRange(field.value.length, field.value.length);
+    
+    // Вызываем событие изменения для активации валидации формы
+    field.dispatchEvent(new Event('input', { bubbles: true }));
+    field.dispatchEvent(new Event('change', { bubbles: true }));
+    
+    console.log('✅ Данные успешно вставлены в поле');
 }
 
 /**
- * Возвращает кнопку в исходное состояние.
- * @param {Element} button - Элемент кнопки.
+ * Показывает диагностическую информацию
  */
-function resetButtonState(button) {
-    if (button) {
-        button.innerText = 'Вставить данные о звонке';
-        button.disabled = false;
-    }
+function showDiagnosticInfo() {
+    console.group('🔧 Диагностическая информация');
+    console.log('URL страницы:', window.location.href);
+    console.log('Доступные элементы формы:');
+    console.log('- Кнопки:', Array.from(document.querySelectorAll('button')).map(b => ({
+        id: b.id,
+        class: b.className,
+        text: b.innerText
+    })));
+    console.log('- Текстовые поля:', Array.from(document.querySelectorAll('textarea')).map(t => ({
+        id: t.id,
+        name: t.name,
+        class: t.className
+    })));
+    console.groupEnd();
 }
 
+// ===== ЗАПУСК =====
+console.log('🏁 Инициализация расширения...');
 
-// --- ЗАПУСК ---
-// Ждем, пока страница полностью загрузится, и только потом добавляем кнопку.
+// Инициализируем API
+const apiInitialized = initializeMessageAPI();
+console.log('📡 API инициализирован:', apiInitialized);
+
+// Ждем, пока страница полностью загрузится
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', createPasteButton);
+    console.log('⏳ Ожидание загрузки DOM...');
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('✅ DOM загружен');
+        createPasteButton();
+    });
 } else {
-  createPasteButton();
+    console.log('✅ DOM уже загружен');
+    createPasteButton();
 }
+
+// Добавляем слушатель для отладки всех сообщений
+if (messageAPI) {
+    console.log('🎧 Установка слушателя сообщений для отладки...');
+}
+
+console.log('✅ Oprosnik Helper: Filler Script полностью загружен');
