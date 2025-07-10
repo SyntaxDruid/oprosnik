@@ -1,109 +1,127 @@
 /**
  * parser.js
- * Этот скрипт работает на странице-источнике (откуда берутся данные о звонке).
- * Его единственная задача — пассивно ждать команды от background.js,
- * находить на странице информацию о самом релевантном (первом найденном) звонке,
- * и отправлять собранные данные обратно.
+ * Работает на странице-источнике. Отслеживает завершение звонков
+ * и сохраняет данные последнего из них, чтобы передать по запросу.
  */
+console.log('Oprosnik Helper: Advanced Parser Script Injected.');
 
-console.log('Oprosnik Helper: Parser Script Injected.');
+class CallEndTracker {
+    constructor() {
+        // Здесь будут храниться данные последнего завершенного звонка
+        this.lastEndedCallData = null;
+        // Статусы, которые однозначно указывают на завершение разговора
+        this.endCallStatuses = ['Поствызов', 'Готов'];
+        // Предыдущий статус агента, чтобы отследить изменение
+        this.previousAgentStatus = null;
 
-// --- КОНФИГУРАЦИЯ СЕЛЕКТОРОВ ---
-// Централизованное хранение селекторов. Если верстка страницы изменится,
-// достаточно будет поправить только этот объект.
-const SELECTORS = {
-  // Селектор для основного контейнера одного звонка
-  callContainer: '.callcontrol-grid-cell-NIrSA',
-  // Селекторы для поиска номера телефона (в порядке приоритета)
-  phone: [
-    '[aria-label*="Участник"]',
-    '.callcontrol-participant-number-2wl0W'
-  ],
-  // Селекторы для поиска длительности звонка
-  duration: [
-    '[aria-label*="Общее время"]',
-    '.timer-timer-2ZG4P',
-    '[role="timer"]'
-  ],
-  // Селекторы для поиска региона
-  region: [
-    '.callcontrol-callVariableValue-290jv span',
-    '[id*="call-header-variable-value"]'
-  ]
-};
-
-/**
- * Вспомогательная функция для надежного поиска текста.
- * Пробует найти элемент по каждому селектору из массива, пока не найдет первый.
- * @param {Element} parentElement - Родительский элемент, в котором будет производиться поиск.
- * @param {string[]} selectorArray - Массив CSS-селекторов для поиска.
- * @returns {string|null} - Текст найденного элемента или null, если ничего не найдено.
- */
-function findAndGetText(parentElement, selectorArray) {
-  for (const selector of selectorArray) {
-    const element = parentElement.querySelector(selector);
-    if (element && element.textContent) {
-      return element.textContent.trim();
+        this.init();
     }
-  }
-  return null; // Возвращаем null, если ничего не найдено
+
+    /**
+     * Инициализирует все необходимые наблюдатели.
+     */
+    init() {
+        console.log('CallTracker: Инициализация...');
+        this.startStatusMonitoring();
+    }
+
+    /**
+     * Запускает MutationObserver для отслеживания изменения статуса оператора.
+     * Это самый надежный способ определить завершение звонка.
+     */
+    startStatusMonitoring() {
+        // Ждем, пока элемент со статусом появится на странице
+        const waitForStatusElement = setInterval(() => {
+            const statusContainer = document.querySelector('#voice-state-select-headerOptionText');
+            if (statusContainer) {
+                clearInterval(waitForStatusElement);
+                console.log('CallTracker: Контейнер статуса найден. Запускаю наблюдатель.');
+
+                // Сохраняем начальный статус
+                this.previousAgentStatus = statusContainer.textContent.trim();
+
+                const observer = new MutationObserver(() => {
+                    this.handleStatusChange(statusContainer);
+                });
+
+                observer.observe(statusContainer, {
+                    characterData: true,
+                    childList: true,
+                    subtree: true
+                });
+            }
+        }, 500); // Проверяем каждые 500мс
+    }
+    
+    /**
+     * Обрабатывает изменение статуса. Если звонок завершился,
+     * запускает парсинг и сохранение данных.
+     */
+    handleStatusChange(statusContainer) {
+        const currentStatus = statusContainer.textContent.trim();
+        const previousStatus = this.previousAgentStatus;
+
+        console.log(`CallTracker: Статус изменился с "${previousStatus}" на "${currentStatus}"`);
+
+        // Главное условие: если предыдущий статус НЕ был статусом завершения,
+        // а текущий — ЯВЛЯЕТСЯ, значит, звонок только что закончился.
+        if (!this.endCallStatuses.includes(previousStatus) && this.endCallStatuses.includes(currentStatus)) {
+            console.log('CallTracker: Обнаружено завершение звонка! Собираю данные...');
+            this.captureLastCallData();
+        }
+
+        // Обновляем предыдущий статус
+        this.previousAgentStatus = currentStatus;
+    }
+
+    /**
+     * Находит на странице информацию о звонке и сохраняет ее.
+     * Эта функция вызывается в момент завершения звонка.
+     */
+    captureLastCallData() {
+        const callContainer = document.querySelector('.callcontrol-grid-cell-NIrSA');
+        if (!callContainer) {
+            console.warn('CallTracker: Не удалось найти контейнер звонка для сбора данных.');
+            return;
+        }
+
+        const phoneEl = callContainer.querySelector('[aria-label*="Участник"]');
+        const durationEl = callContainer.querySelector('[role="timer"]');
+        const regionEl = callContainer.querySelector('.callcontrol-callVariableValue-290jv span');
+
+        this.lastEndedCallData = {
+            phone: phoneEl ? phoneEl.textContent.trim() : 'Не найден',
+            duration: durationEl ? durationEl.textContent.trim() : 'Не найдена',
+            region: regionEl ? regionEl.textContent.trim() : 'Не найден',
+            capturedAt: new Date().toLocaleTimeString()
+        };
+
+        console.log('CallTracker: Данные последнего звонка зафиксированы:', this.lastEndedCallData);
+    }
+
+    /**
+     * Возвращает данные последнего завершенного звонка.
+     */
+    getLastCallData() {
+        return this.lastEndedCallData;
+    }
 }
 
-/**
- * Основная функция парсинга.
- * Находит самый релевантный (первый) контейнер звонка на странице и извлекает из него данные.
- * @returns {object|null} - Объект с данными о звонке или null, если звонок не найден.
- */
-function parseCallData() {
-  // Находим первый контейнер, соответствующий селектору звонка
-  const callContainer = document.querySelector(SELECTORS.callContainer);
-
-  if (!callContainer) {
-    console.log('Парсер: Контейнер звонка не найден на странице.');
-    return null;
-  }
-
-  // Используем нашу вспомогательную функцию для извлечения данных
-  const phone = findAndGetText(callContainer, SELECTORS.phone);
-  const duration = findAndGetText(callContainer, SELECTORS.duration);
-  const region = findAndGetText(callContainer, SELECTORS.region);
-
-  // Проверяем, что удалось найти хотя бы какую-то информацию
-  if (!phone && !duration && !region) {
-    console.log('Парсер: Не удалось извлечь никаких данных из контейнера звонка.');
-    return null;
-  }
-
-  // Формируем и возвращаем структурированный объект с данными
-  const callData = {
-    phone: phone || 'Не найден',
-    duration: duration || 'Не найдена',
-    region: region || 'Не найден',
-    parsedAt: new Date().toISOString()
-  };
-
-  console.log('Парсер: Данные успешно собраны:', callData);
-  return callData;
-}
-
+// Создаем единственный экземпляр нашего трекера
+const callTracker = new CallEndTracker();
 
 // --- ОБРАБОТЧИК СООБЩЕНИЙ ---
 // Слушаем входящие команды от background.js
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  // Проверяем, что это именно та команда, которую мы ждем
-  if (request.action === 'parseCallData') {
-    console.log('Парсер: Получена команда на сбор данных...');
-    const data = parseCallData();
+    if (request.action === 'parseCallData') {
+        console.log('Парсер: Получена команда на получение данных...');
+        const data = callTracker.getLastCallData();
 
-    if (data) {
-      // Отправляем ответ с успешно собранными данными
-      sendResponse({ status: 'success', data: data });
-    } else {
-      // Отправляем ответ об ошибке, если данные не найдены
-      sendResponse({ status: 'error', message: 'Не удалось найти данные о звонке на странице.' });
+        if (data) {
+            sendResponse({ status: 'success', data: data });
+        } else {
+            sendResponse({ status: 'error', message: 'Данные о последнем завершенном звонке еще не были зафиксированы.' });
+        }
     }
-  }
-
-  // Возвращаем true, чтобы указать, что ответ будет отправлен асинхронно (хорошая практика).
-  return true;
+    return true;
 });
