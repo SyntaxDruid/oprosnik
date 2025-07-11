@@ -334,6 +334,9 @@ function addStatusIndicator() {
 /**
  * Обработчик нажатия на нашу кнопку.
  */
+/**
+ * Обработчик нажатия на нашу кнопку. (ИСПРАВЛЕННАЯ ВЕРСИЯ)
+ */
 function handlePasteButtonClick(event) {
     console.log('🖱️ Кнопка нажата', {
         timestamp: new Date().toISOString(),
@@ -345,7 +348,6 @@ function handlePasteButtonClick(event) {
     // Проверяем инициализацию API
     if (!messageAPI && !initializeMessageAPI()) {
         console.error('❌ Не удалось инициализировать API');
-        // Пробуем получить из localStorage
         tryLocalStorageFallback(button);
         return;
     }
@@ -359,51 +361,55 @@ function handlePasteButtonClick(event) {
     safeSendMessage({ action: 'getCallData' }, (response) => {
         console.log('📨 Обработка ответа:', response);
         
-        if (response && response.status === 'success') {
+        button.innerText = originalText; // Возвращаем текст кнопки в любом случае
+        button.disabled = false;
+
+        if (response && response.status === 'success' && response.data) {
             console.log('✅ Данные успешно получены:', response.data);
             
-            // Проверяем, есть ли история звонков в localStorage
-            try {
-                const history = localStorage.getItem('oprosnik_call_history');
-                if (history) {
-                    const callHistory = JSON.parse(history);
-                    if (callHistory && callHistory.length > 1) {
-                        console.log('📚 Найдена история звонков:', callHistory.length);
-                        button.innerText = originalText;
-                        button.disabled = false;
-                        
-                        // Показываем модальное окно с выбором
-                        showCallHistoryModal(callHistory);
-                        return;
-                    }
-                }
-            } catch (e) {
-                console.log('⚠️ Не удалось загрузить историю:', e);
+            // ПРОВЕРКА: response.data должен быть массивом истории.
+            // Если это массив и в нем больше одного звонка, показываем модальное окно.
+            if (Array.isArray(response.data) && response.data.length > 1) {
+                console.log(`📚 Найдена история из ${response.data.length} звонков. Показываем выбор.`);
+                showCallHistoryModal(response.data);
+            
+            // Если это массив, но в нем только один звонок
+            } else if (Array.isArray(response.data) && response.data.length === 1) {
+                console.log('📝 В истории только один звонок. Вставляем его.');
+                pasteDataIntoComment(response.data[0]);
+                button.innerText = 'Данные вставлены!';
+                
+            // Если это не массив, а просто объект одного звонка (для обратной совместимости)
+            } else if (typeof response.data === 'object' && response.data !== null && !Array.isArray(response.data)) {
+                console.log('📝 Получен один звонок. Вставляем его.');
+                pasteDataIntoComment(response.data);
+                button.innerText = 'Данные вставлены!';
+            
+            // Если данные пустые
+            } else {
+                 console.log('⚠️ Получены пустые данные. Пробуем fallback.');
+                 tryLocalStorageFallback(button);
+                 return; // Выходим, чтобы не показывать "Данные вставлены!"
             }
-            
-            // Если истории нет или только один звонок - вставляем последний
-            pasteDataIntoComment(response.data);
-            button.innerText = 'Данные вставлены!';
-            button.style.backgroundColor = '#28a745';
-            
-            // Возвращаем кнопку в исходное состояние через 2 секунды
-            setTimeout(() => {
-                button.innerText = originalText;
-                button.disabled = false;
-                button.style.backgroundColor = '';
-            }, 2000);
+
+            // Возвращаем кнопку в исходное состояние через 2 секунды, если что-то вставили
+            if (button.innerText === 'Данные вставлены!') {
+                button.style.backgroundColor = '#28a745';
+                setTimeout(() => {
+                    button.innerText = originalText;
+                    button.disabled = false;
+                    button.style.backgroundColor = '';
+                }, 2000);
+            }
 
         } else {
             // Если произошла ошибка
             const errorMessage = response?.message || 'Неизвестная ошибка';
             console.error('❌ Ошибка при получении данных:', errorMessage);
-            
-            // Пробуем fallback через localStorage
             tryLocalStorageFallback(button);
         }
     });
 }
-
 /**
  * Пробует получить данные из localStorage как fallback
  */
