@@ -105,29 +105,41 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     // Даем скрипту время на инициализацию
                     await new Promise(resolve => setTimeout(resolve, 500));
                 }
-                
-                // 3. Отправляем команду на парсинг в parser.js
-                console.log('📤 Отправляем запрос в parser.js...');
-                
-                chrome.tabs.sendMessage(parserTab.id, { action: 'parseCallData' }, (response) => {
+                // Стало:
+                // 3. Отправляем команду на получение ИСТОРИИ в parser.js
+                console.log('📤 Отправляем запрос на получение ИСТОРИИ в parser.js...');
+
+                // Запрашиваем именно историю звонков
+                chrome.tabs.sendMessage(parserTab.id, { action: 'getCallHistory' }, (parserResponse) => {
                     if (chrome.runtime.lastError) {
+                        // ... (вся ваша обработка ошибок остается без изменений)
                         console.error('❌ Background: Ошибка при отправке сообщения в parser.js:', chrome.runtime.lastError.message);
-                        
-                        // Более подробное сообщение об ошибке
-                        let errorMessage = 'Не удалось получить данные со страницы Finesse.';
-                        
-                        if (chrome.runtime.lastError.message.includes('context invalidated')) {
-                            errorMessage += ' Расширение было обновлено. Перезагрузите обе страницы.';
-                        } else if (chrome.runtime.lastError.message.includes('Receiving end does not exist')) {
-                            errorMessage += ' Перезагрузите страницу Finesse.';
-                        }
-                        
-                        sendResponse({ 
-                            status: 'error', 
-                            message: errorMessage 
-                        });
+                        // ...
+                        sendResponse({ status: 'error', message: 'Не удалось получить данные со страницы Finesse.' });
                         return;
                     }
+                    
+                    console.log('✅ Background: Получен ответ с историей от parser.js:', parserResponse);
+                    
+                    // ВАЖНО: Адаптируем ответ для filler.js
+                    // filler.js ожидает массив звонков в поле 'data'.
+                    // А parser.js присылает его в поле 'history'.
+                    // Поэтому мы "перекладываем" данные из одного поля в другое.
+                    
+                    if (parserResponse && parserResponse.status === 'success') {
+                        const responseForFiller = {
+                            status: 'success',
+                            data: parserResponse.history // <--- КЛЮЧЕВОЕ ИЗМЕНЕНИЕ
+                        };
+                        
+                        console.log('↪️ Пересылаем адаптированный ответ в filler.js:', responseForFiller);
+                        sendResponse(responseForFiller);
+                        
+                    } else {
+                        // Если от парсера пришла ошибка, просто пересылаем ее дальше
+                        sendResponse(parserResponse);
+                    }
+                });
                     
                     console.log('✅ Background: Получен ответ от parser.js:', response);
                     
