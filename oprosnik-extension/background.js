@@ -140,13 +140,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                         sendResponse(parserResponse);
                     }
                 });
-                    
-                    console.log('✅ Background: Получен ответ от parser.js:', response);
-                    
-                    // Пересылаем полученный ответ обратно в filler.js
-                    sendResponse(response);
-                });
-                
+
             } catch (error) {
                 console.error('❌ Неожиданная ошибка в background.js:', error);
                 sendResponse({ 
