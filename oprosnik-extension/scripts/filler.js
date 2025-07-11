@@ -1,17 +1,16 @@
 /**
- * filler.js - Полная обновленная версия
- * Версия: 2.1
+ * filler.js - Версия с поддержкой истории звонков
+ * Версия: 2.2
  * 
  * Работает на странице опросника.
- * 1. Добавляет кнопку "Вставить данные о звонке".
- * 2. По клику на кнопку инициирует процесс получения данных.
- * 3. Получив данные, форматирует их и вставляет в поле "Комментарий".
+ * Позволяет выбрать данные из последних звонков.
  */
 
 console.log('🚀 Oprosnik Helper: Filler Script начинает загрузку...', {
     timestamp: new Date().toISOString(),
     url: window.location.href,
-    readyState: document.readyState
+    readyState: document.readyState,
+    version: '2.2'
 });
 
 // Проверка доступности Chrome API
@@ -75,6 +74,126 @@ function safeSendMessage(message, callback) {
             message: 'Ошибка выполнения: ' + error.message 
         });
     }
+}
+
+/**
+ * Создает модальное окно для выбора звонка из истории
+ */
+function showCallHistoryModal(callHistory) {
+    console.log('📚 Показываем историю звонков:', callHistory.length);
+    
+    // Создаем оверлей
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    `;
+    
+    // Создаем модальное окно
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        max-width: 600px;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    `;
+    
+    // Заголовок
+    modal.innerHTML = `
+        <h3 style="margin-top: 0; color: #333;">Выберите звонок для вставки</h3>
+        <p style="color: #666; margin-bottom: 20px;">Найдено звонков в истории: ${callHistory.length}</p>
+    `;
+    
+    // Создаем список звонков
+    const callList = document.createElement('div');
+    callList.style.cssText = 'display: flex; flex-direction: column; gap: 10px;';
+    
+    callHistory.forEach((call, index) => {
+        const callItem = document.createElement('div');
+        callItem.style.cssText = `
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #f9f9f9;
+        `;
+        
+        callItem.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div>
+                    <strong style="color: #333;">📞 ${call.phone}</strong>
+                    <div style="color: #666; font-size: 14px; margin-top: 5px;">
+                        ⏱ Длительность: ${call.duration}<br>
+                        📍 Регион: ${call.region}<br>
+                        🕐 Время: ${call.capturedAt}
+                        ${call.capturedDate ? `<br>📅 Дата: ${new Date(call.capturedDate).toLocaleDateString()}` : ''}
+                    </div>
+                </div>
+                <div style="text-align: right; color: #999; font-size: 12px;">
+                    ${index === 0 ? '<span style="color: #4CAF50; font-weight: bold;">Последний</span>' : `#${index + 1}`}
+                </div>
+            </div>
+        `;
+        
+        // Эффекты при наведении
+        callItem.onmouseenter = () => {
+            callItem.style.borderColor = '#4CAF50';
+            callItem.style.background = '#f0f8f0';
+        };
+        
+        callItem.onmouseleave = () => {
+            callItem.style.borderColor = '#e0e0e0';
+            callItem.style.background = '#f9f9f9';
+        };
+        
+        // Обработчик клика
+        callItem.onclick = () => {
+            pasteDataIntoComment(call);
+            document.body.removeChild(overlay);
+        };
+        
+        callList.appendChild(callItem);
+    });
+    
+    modal.appendChild(callList);
+    
+    // Кнопка закрытия
+    const closeButton = document.createElement('button');
+    closeButton.textContent = 'Отмена';
+    closeButton.style.cssText = `
+        margin-top: 20px;
+        padding: 10px 20px;
+        background: #666;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        width: 100%;
+    `;
+    closeButton.onclick = () => document.body.removeChild(overlay);
+    modal.appendChild(closeButton);
+    
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    
+    // Закрытие по клику на оверлей
+    overlay.onclick = (e) => {
+        if (e.target === overlay) {
+            document.body.removeChild(overlay);
+        }
+    };
 }
 
 /**
@@ -160,53 +279,21 @@ function createPasteButton() {
         
         // Добавляем data-атрибуты для диагностики
         pasteButton.setAttribute('data-extension-id', chrome.runtime?.id || 'unknown');
-        pasteButton.setAttribute('data-version', '2.1');
+        pasteButton.setAttribute('data-version', '2.2');
         pasteButton.setAttribute('data-created-at', new Date().toISOString());
 
         // Добавляем обработчик клика
         pasteButton.addEventListener('click', handlePasteButtonClick);
 
-        // Определяем, куда вставить кнопку
-        let inserted = false;
-        
-        // Стратегия 1: После целевой кнопки
+        // Вставляем кнопку
         try {
             targetButton.insertAdjacentElement('afterend', pasteButton);
-            inserted = true;
             console.log('✅ Кнопка вставлена после целевой кнопки');
-        } catch (e) {
-            console.warn('⚠️ Не удалось вставить после кнопки:', e);
-        }
-        
-        // Стратегия 2: В родительский контейнер
-        if (!inserted && targetButton.parentElement) {
-            try {
-                targetButton.parentElement.appendChild(pasteButton);
-                inserted = true;
-                console.log('✅ Кнопка добавлена в родительский контейнер');
-            } catch (e) {
-                console.warn('⚠️ Не удалось добавить в контейнер:', e);
-            }
-        }
-        
-        // Стратегия 3: В форму
-        if (!inserted) {
-            const form = document.querySelector('form');
-            if (form) {
-                const actionsDiv = form.querySelector('.form-actions') || form.querySelector('.btn-group') || form;
-                actionsDiv.appendChild(pasteButton);
-                inserted = true;
-                console.log('✅ Кнопка добавлена в форму');
-            }
-        }
-        
-        if (inserted) {
-            console.log('✅ Кнопка "Вставить данные о звонке" успешно добавлена');
             
-            // Проверяем, что кнопка действительно видима
+            // Проверяем видимость
             setTimeout(() => {
                 if (pasteButton.offsetParent === null) {
-                    console.error('⚠️ Кнопка добавлена, но не видима! Проверьте CSS.');
+                    console.error('⚠️ Кнопка добавлена, но не видима!');
                 } else {
                     console.log('✅ Кнопка видима и готова к использованию');
                 }
@@ -214,8 +301,9 @@ function createPasteButton() {
             
             // Добавляем индикатор статуса API
             addStatusIndicator();
-        } else {
-            console.error('❌ Не удалось добавить кнопку ни одним способом');
+            
+        } catch (e) {
+            console.error('❌ Ошибка при добавлении кнопки:', e);
         }
     };
     
@@ -257,11 +345,8 @@ function handlePasteButtonClick(event) {
     // Проверяем инициализацию API
     if (!messageAPI && !initializeMessageAPI()) {
         console.error('❌ Не удалось инициализировать API');
-        alert('Ошибка: API расширения недоступен.\n\nВозможные причины:\n' +
-              '1. Расширение не установлено или отключено\n' +
-              '2. Страница требует перезагрузки\n' +
-              '3. Конфликт с другими расширениями\n\n' +
-              'Попробуйте перезагрузить страницу (F5)');
+        // Пробуем получить из localStorage
+        tryLocalStorageFallback(button);
         return;
     }
     
@@ -276,6 +361,27 @@ function handlePasteButtonClick(event) {
         
         if (response && response.status === 'success') {
             console.log('✅ Данные успешно получены:', response.data);
+            
+            // Проверяем, есть ли история звонков в localStorage
+            try {
+                const history = localStorage.getItem('oprosnik_call_history');
+                if (history) {
+                    const callHistory = JSON.parse(history);
+                    if (callHistory && callHistory.length > 1) {
+                        console.log('📚 Найдена история звонков:', callHistory.length);
+                        button.innerText = originalText;
+                        button.disabled = false;
+                        
+                        // Показываем модальное окно с выбором
+                        showCallHistoryModal(callHistory);
+                        return;
+                    }
+                }
+            } catch (e) {
+                console.log('⚠️ Не удалось загрузить историю:', e);
+            }
+            
+            // Если истории нет или только один звонок - вставляем последний
             pasteDataIntoComment(response.data);
             button.innerText = 'Данные вставлены!';
             button.style.backgroundColor = '#28a745';
@@ -292,29 +398,53 @@ function handlePasteButtonClick(event) {
             const errorMessage = response?.message || 'Неизвестная ошибка';
             console.error('❌ Ошибка при получении данных:', errorMessage);
             
-            // Детальное сообщение об ошибке
-            let userMessage = 'Ошибка: ' + errorMessage;
-            
-            if (errorMessage.includes('Вкладка-источник не найдена')) {
-                userMessage += '\n\nУбедитесь, что открыта вкладка Cisco Finesse:\n' +
-                              'https://ssial000ap008.si.rt.ru:8445/desktop/container/';
-            } else if (errorMessage.includes('Данные о последнем завершенном звонке еще не были зафиксированы')) {
-                userMessage += '\n\nСначала завершите звонок в Cisco Finesse,\n' +
-                              'затем попробуйте снова.';
-            }
-            
-            alert(userMessage);
-            
-            button.innerText = 'Ошибка!';
-            button.style.backgroundColor = '#dc3545';
-            
-            setTimeout(() => {
-                button.innerText = originalText;
-                button.disabled = false;
-                button.style.backgroundColor = '';
-            }, 2000);
+            // Пробуем fallback через localStorage
+            tryLocalStorageFallback(button);
         }
     });
+}
+
+/**
+ * Пробует получить данные из localStorage как fallback
+ */
+function tryLocalStorageFallback(button) {
+    console.log('🔄 Пробуем получить данные из localStorage...');
+    
+    try {
+        const history = localStorage.getItem('oprosnik_call_history');
+        const lastCall = localStorage.getItem('oprosnik_last_call');
+        
+        if (history) {
+            const callHistory = JSON.parse(history);
+            if (callHistory && callHistory.length > 0) {
+                console.log('✅ История найдена в localStorage:', callHistory.length);
+                button.innerText = 'Вставить данные о звонке';
+                button.disabled = false;
+                showCallHistoryModal(callHistory);
+                return;
+            }
+        }
+        
+        if (lastCall) {
+            const data = JSON.parse(lastCall);
+            console.log('✅ Последний звонок найден в localStorage:', data);
+            pasteDataIntoComment(data);
+            button.innerText = 'Данные вставлены!';
+            setTimeout(() => {
+                button.innerText = 'Вставить данные о звонке';
+                button.disabled = false;
+            }, 2000);
+            return;
+        }
+        
+        throw new Error('Нет данных в localStorage');
+        
+    } catch (e) {
+        console.error('❌ Ошибка при чтении localStorage:', e);
+        alert('Ошибка: Не удалось получить данные о звонках.\n\nУбедитесь, что:\n1. Открыта вкладка Cisco Finesse\n2. Был завершен хотя бы один звонок');
+        button.innerText = 'Вставить данные о звонке';
+        button.disabled = false;
+    }
 }
 
 /**
@@ -359,11 +489,12 @@ function pasteDataIntoComment(callData) {
 function insertDataIntoField(field, callData) {
     // Форматируем данные в красивую строку для вставки
     const formattedData = `--------------------------------
-Данные о последнем звонке:
+Данные о звонке:
 - Номер телефона: ${callData.phone}
 - Длительность: ${callData.duration}
 - Регион: ${callData.region}
 - Время фиксации: ${callData.capturedAt}
+${callData.capturedDate ? `- Дата: ${new Date(callData.capturedDate).toLocaleDateString()}` : ''}
 --------------------------------`;
 
     // Сохраняем текущее значение
@@ -427,6 +558,17 @@ window.debugOprosnikHelper = function() {
     console.log('Наша кнопка:', document.querySelector('.oprosnik-helper-btn'));
     console.log('Chrome API:', typeof chrome !== 'undefined' && chrome.runtime);
     console.log('Extension ID:', chrome.runtime?.id);
+    
+    // Проверяем localStorage
+    try {
+        const history = localStorage.getItem('oprosnik_call_history');
+        const lastCall = localStorage.getItem('oprosnik_last_call');
+        console.log('История в localStorage:', history ? JSON.parse(history).length + ' звонков' : 'нет');
+        console.log('Последний звонок:', lastCall ? 'есть' : 'нет');
+    } catch (e) {
+        console.error('Ошибка чтения localStorage:', e);
+    }
+    
     console.groupEnd();
 };
 
