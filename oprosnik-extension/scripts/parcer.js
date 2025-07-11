@@ -1,16 +1,15 @@
 /**
- * parser.js - Улучшенная версия с диагностикой
- * Версия: 2.0
+ * parser.js - Версия с исправленным сохранением и историей звонков
+ * Версия: 2.1
  * Работает на странице-источнике. Отслеживает завершение звонков
- * и сохраняет данные последнего из них, чтобы передать по запросу.
+ * и сохраняет данные последних звонков в localStorage.
  */
 
-// Диагностика при загрузке
 console.log('🚀 Oprosnik Helper: Parser Script загружается...', {
     timestamp: new Date().toISOString(),
     url: window.location.href,
     extensionId: chrome.runtime?.id,
-    version: '2.0'
+    version: '2.1'
 });
 
 // Проверяем доступность Chrome API
@@ -25,6 +24,10 @@ class CallEndTracker {
         // Данные последнего завершенного звонка
         this.lastEndedCallData = null;
         
+        // История звонков (храним последние 5)
+        this.callHistory = [];
+        this.maxHistorySize = 5;
+        
         // Статусы завершения разговора
         this.endCallStatuses = ['Поствызов', 'Готов', 'Ready', 'Not Ready', 'Wrap Up'];
         
@@ -35,7 +38,8 @@ class CallEndTracker {
         this.stats = {
             statusChanges: 0,
             callsTracked: 0,
-            errors: 0
+            saveAttempts: 0,
+            saveErrors: 0
         };
         
         // Тестовые данные для отладки
@@ -59,6 +63,7 @@ class CallEndTracker {
         window._oprosnikHelper = {
             tracker: this,
             getLastCall: () => this.getLastCallData(),
+            getCallHistory: () => this.callHistory,
             getStats: () => this.stats,
             setTestData: () => {
                 this.lastEndedCallData = this.testData;
@@ -66,15 +71,24 @@ class CallEndTracker {
                 console.log('✅ Тестовые данные установлены:', this.testData);
                 return this.testData;
             },
-            findCallElements: () => this.debugFindElements()
+            findCallElements: () => this.debugFindElements(),
+            // Новый метод для ручного сохранения
+            saveCurrentData: () => {
+                if (this.lastEndedCallData) {
+                    this.saveToLocalStorage(this.lastEndedCallData);
+                    return 'Данные сохранены';
+                }
+                return 'Нет данных для сохранения';
+            }
         };
         
         console.log('💡 Команды для отладки:');
         console.log('   window._oprosnikHelper.setTestData() - установить тестовые данные');
-        console.log('   window._oprosnikHelper.getLastCall() - получить последние данные');
-        console.log('   window._oprosnikHelper.findCallElements() - найти элементы звонка');
+        console.log('   window._oprosnikHelper.getLastCall() - получить последний звонок');
+        console.log('   window._oprosnikHelper.getCallHistory() - получить историю звонков');
+        console.log('   window._oprosnikHelper.saveCurrentData() - принудительно сохранить текущие данные');
         
-        // Загружаем последние данные из localStorage при старте
+        // Загружаем историю из localStorage при старте
         this.loadFromLocalStorage();
         
         // Запускаем мониторинг статуса
@@ -239,18 +253,20 @@ class CallEndTracker {
         const duration = durationEl?.textContent?.trim() || 'Не найдена';
         const region = regionEl?.textContent?.trim() || 'Не найден';
 
-        this.lastEndedCallData = {
+        const callData = {
             phone: phone,
             duration: duration,
             region: region,
-            capturedAt: new Date().toLocaleTimeString()
+            capturedAt: new Date().toLocaleTimeString(),
+            capturedDate: new Date().toISOString()
         };
 
-        console.log('✅ CallTracker: Данные последнего звонка зафиксированы:', this.lastEndedCallData);
+        this.lastEndedCallData = callData;
+        console.log('✅ CallTracker: Данные последнего звонка зафиксированы:', callData);
         this.stats.callsTracked++;
         
-        // Сохраняем в localStorage
-        this.saveToLocalStorage(this.lastEndedCallData);
+        // ВАЖНО: Сохраняем в localStorage и историю
+        this.saveToLocalStorage(callData);
         
         // Показываем уведомление
         this.showNotification('Данные звонка сохранены');
@@ -275,20 +291,51 @@ class CallEndTracker {
     }
     
     /**
-     * Сохраняет данные в localStorage
+     * Сохраняет данные в localStorage с историей
      */
     saveToLocalStorage(data) {
+        console.log('💾 Начинаем сохранение в localStorage...');
+        this.stats.saveAttempts++;
+        
         try {
+            // Добавляем метаданные
             const dataWithMeta = {
                 ...data,
                 savedAt: Date.now(),
-                extensionVersion: '2.0'
+                extensionVersion: '2.1'
             };
+            
+            // Сохраняем как последний звонок
             localStorage.setItem('oprosnik_last_call', JSON.stringify(dataWithMeta));
-            console.log('💾 Данные сохранены в localStorage');
+            console.log('✅ Сохранено как последний звонок');
+            
+            // Добавляем в историю
+            this.callHistory.unshift(dataWithMeta); // Добавляем в начало
+            
+            // Ограничиваем размер истории
+            if (this.callHistory.length > this.maxHistorySize) {
+                this.callHistory = this.callHistory.slice(0, this.maxHistorySize);
+            }
+            
+            // Сохраняем историю
+            localStorage.setItem('oprosnik_call_history', JSON.stringify(this.callHistory));
+            console.log(`✅ Сохранено в историю. Всего звонков в истории: ${this.callHistory.length}`);
+            
+            // Логируем для отладки
+            console.log('📦 Сохраненные данные:', dataWithMeta);
+            console.log('📚 История звонков:', this.callHistory);
+            
         } catch (e) {
             console.error('❌ Ошибка сохранения в localStorage:', e);
-            this.stats.errors++;
+            this.stats.saveErrors++;
+            
+            // Пробуем сохранить хотя бы последний звонок
+            try {
+                localStorage.setItem('oprosnik_last_call_backup', JSON.stringify(data));
+                console.log('⚠️ Сохранено в резервное хранилище');
+            } catch (e2) {
+                console.error('❌ Критическая ошибка сохранения:', e2);
+            }
         }
     }
     
@@ -297,16 +344,20 @@ class CallEndTracker {
      */
     loadFromLocalStorage() {
         try {
-            const stored = localStorage.getItem('oprosnik_last_call');
-            if (stored) {
-                const data = JSON.parse(stored);
-                // Проверяем актуальность (не старше 24 часов)
-                const age = Date.now() - data.savedAt;
-                if (age < 24 * 60 * 60 * 1000) {
-                    this.lastEndedCallData = data;
-                    console.log('💾 Загружены данные из localStorage:', data);
-                }
+            // Загружаем последний звонок
+            const lastCall = localStorage.getItem('oprosnik_last_call');
+            if (lastCall) {
+                this.lastEndedCallData = JSON.parse(lastCall);
+                console.log('💾 Загружен последний звонок:', this.lastEndedCallData);
             }
+            
+            // Загружаем историю
+            const history = localStorage.getItem('oprosnik_call_history');
+            if (history) {
+                this.callHistory = JSON.parse(history);
+                console.log(`💾 Загружена история звонков: ${this.callHistory.length} записей`);
+            }
+            
         } catch (e) {
             console.error('❌ Ошибка загрузки из localStorage:', e);
         }
@@ -371,9 +422,11 @@ class CallEndTracker {
 Статистика:
 - Изменений статуса: ${this.stats.statusChanges}
 - Отслежено звонков: ${this.stats.callsTracked}
-- Ошибок: ${this.stats.errors}
+- Попыток сохранения: ${this.stats.saveAttempts}
+- Ошибок сохранения: ${this.stats.saveErrors}
+- Звонков в истории: ${this.callHistory.length}
 
-Последние данные:
+Последний звонок:
 ${this.lastEndedCallData ? JSON.stringify(this.lastEndedCallData, null, 2) : 'Нет данных'}
                 `;
                 alert(info);
@@ -459,6 +512,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 hint: 'Используйте window._oprosnikHelper.setTestData() для тестирования'
             });
         }
+    }
+    
+    // Новый запрос для получения истории
+    if (request.action === 'getCallHistory') {
+        console.log('📚 Parser: Запрос истории звонков...');
+        sendResponse({ 
+            status: 'success', 
+            history: callTracker.callHistory,
+            count: callTracker.callHistory.length
+        });
     }
     
     return true;
