@@ -1,15 +1,15 @@
 /**
- * parser.js - Версия с исправленным сохранением и историей звонков
- * Версия: 2.1
- * Работает на странице-источнике. Отслеживает завершение звонков
- * и сохраняет данные последних звонков в localStorage.
+ * parser.js - Версия с непрерывным отслеживанием активного звонка
+ * Версия: 3.0
+ * 
+ * Решает проблему исчезновения данных при завершении звонка
  */
 
 console.log('🚀 Oprosnik Helper: Parser Script загружается...', {
     timestamp: new Date().toISOString(),
     url: window.location.href,
     extensionId: chrome.runtime?.id,
-    version: '2.1'
+    version: '3.0'
 });
 
 // Проверяем доступность Chrome API
@@ -24,6 +24,9 @@ class CallEndTracker {
         // Данные последнего завершенного звонка
         this.lastEndedCallData = null;
         
+        // НОВОЕ: Данные текущего активного звонка
+        this.currentCallData = null;
+        
         // История звонков (храним последние 5)
         this.callHistory = [];
         this.maxHistorySize = 5;
@@ -31,13 +34,20 @@ class CallEndTracker {
         // Статусы завершения разговора
         this.endCallStatuses = ['Поствызов', 'Готов', 'Ready', 'Not Ready', 'Wrap Up'];
         
+        // Статусы активного разговора
+        this.activeCallStatuses = ['Разговор', 'Talking', 'On Call', 'Connected'];
+        
         // Предыдущий статус агента
         this.previousAgentStatus = null;
+        
+        // Интервал для отслеживания активного звонка
+        this.callMonitorInterval = null;
         
         // Счетчики для диагностики
         this.stats = {
             statusChanges: 0,
             callsTracked: 0,
+            callsMonitored: 0,
             saveAttempts: 0,
             saveErrors: 0
         };
@@ -63,6 +73,7 @@ class CallEndTracker {
         window._oprosnikHelper = {
             tracker: this,
             getLastCall: () => this.getLastCallData(),
+            getCurrentCall: () => this.currentCallData,
             getCallHistory: () => this.callHistory,
             getStats: () => this.stats,
             setTestData: () => {
@@ -72,21 +83,24 @@ class CallEndTracker {
                 return this.testData;
             },
             findCallElements: () => this.debugFindElements(),
-            // Новый метод для ручного сохранения
-            saveCurrentData: () => {
-                if (this.lastEndedCallData) {
-                    this.saveToLocalStorage(this.lastEndedCallData);
-                    return 'Данные сохранены';
+            // Новый метод для ручного захвата данных
+            captureCurrentCall: () => this.captureActiveCallData(),
+            // Метод для запуска/остановки мониторинга
+            toggleMonitoring: (enable) => {
+                if (enable) {
+                    this.startCallMonitoring();
+                } else {
+                    this.stopCallMonitoring();
                 }
-                return 'Нет данных для сохранения';
             }
         };
         
         console.log('💡 Команды для отладки:');
         console.log('   window._oprosnikHelper.setTestData() - установить тестовые данные');
         console.log('   window._oprosnikHelper.getLastCall() - получить последний звонок');
-        console.log('   window._oprosnikHelper.getCallHistory() - получить историю звонков');
-        console.log('   window._oprosnikHelper.saveCurrentData() - принудительно сохранить текущие данные');
+        console.log('   window._oprosnikHelper.getCurrentCall() - получить текущий звонок');
+        console.log('   window._oprosnikHelper.captureCurrentCall() - захватить данные текущего звонка');
+        console.log('   window._oprosnikHelper.toggleMonitoring(true/false) - вкл/выкл мониторинг');
         
         // Загружаем историю из localStorage при старте
         this.loadFromLocalStorage();
@@ -174,13 +188,37 @@ class CallEndTracker {
             this.stats.statusChanges++;
             console.log(`📞 CallTracker: Статус изменился с "${previousStatus}" на "${currentStatus}"`);
 
+            // НОВОЕ: Проверяем начало разговора
+            if (this.activeCallStatuses.some(s => currentStatus.includes(s))) {
+                console.log('📞 Обнаружено начало разговора! Запускаю мониторинг...');
+                this.startCallMonitoring();
+            }
+
             // Проверяем завершение звонка
             if (!this.endCallStatuses.some(s => previousStatus.includes(s)) && 
                 this.endCallStatuses.some(s => currentStatus.includes(s))) {
-                console.log('☎️ CallTracker: Обнаружено завершение звонка! Собираю данные...');
+                console.log('☎️ CallTracker: Обнаружено завершение звонка!');
                 
-                // Небольшая задержка, чтобы DOM успел обновиться
-                setTimeout(() => this.captureLastCallData(), 500);
+                // Останавливаем мониторинг
+                this.stopCallMonitoring();
+                
+                // Сохраняем последние захваченные данные
+                if (this.currentCallData) {
+                    console.log('💾 Сохраняю последние данные активного звонка...');
+                    this.lastEndedCallData = { ...this.currentCallData };
+                    this.stats.callsTracked++;
+                    
+                    // Сохраняем в localStorage и историю
+                    this.saveToLocalStorage(this.lastEndedCallData);
+                    
+                    // Показываем уведомление
+                    this.showNotification('Данные звонка сохранены');
+                    
+                    // Очищаем текущие данные
+                    this.currentCallData = null;
+                } else {
+                    console.warn('⚠️ Нет данных о завершенном звонке');
+                }
             }
 
             this.previousAgentStatus = currentStatus;
@@ -188,11 +226,40 @@ class CallEndTracker {
     }
 
     /**
-     * Находит на странице информацию о звонке и сохраняет ее.
+     * Запускает периодический мониторинг активного звонка
      */
-    captureLastCallData() {
-        console.log('📊 Сбор данных о звонке...');
+    startCallMonitoring() {
+        // Очищаем предыдущий интервал если есть
+        if (this.callMonitorInterval) {
+            clearInterval(this.callMonitorInterval);
+        }
         
+        console.log('🔄 Начинаю мониторинг активного звонка...');
+        
+        // Сразу захватываем данные
+        this.captureActiveCallData();
+        
+        // Затем обновляем каждую секунду
+        this.callMonitorInterval = setInterval(() => {
+            this.captureActiveCallData();
+        }, 1000); // Каждую секунду
+    }
+    
+    /**
+     * Останавливает мониторинг активного звонка
+     */
+    stopCallMonitoring() {
+        if (this.callMonitorInterval) {
+            console.log('⏹️ Останавливаю мониторинг активного звонка');
+            clearInterval(this.callMonitorInterval);
+            this.callMonitorInterval = null;
+        }
+    }
+
+    /**
+     * Захватывает данные активного звонка
+     */
+    captureActiveCallData() {
         // Пробуем разные селекторы для контейнера звонка
         const containerSelectors = [
             '.callcontrol-grid-cell-NIrSA',
@@ -201,26 +268,35 @@ class CallEndTracker {
             '[class*="call-control"]',
             '[class*="active-call"]',
             '.call-info',
-            '#call-info-panel'
+            '#call-info-panel',
+            // Новые селекторы для активного звонка
+            '[class*="callcontrol"][class*="active"]',
+            '[class*="call"][class*="connected"]',
+            '[class*="call-container"]'
         ];
         
         let callContainer = null;
         for (const selector of containerSelectors) {
-            callContainer = document.querySelector(selector);
-            if (callContainer) {
-                console.log(`✅ Найден контейнер по селектору: ${selector}`);
-                break;
+            const elements = document.querySelectorAll(selector);
+            // Ищем контейнер, который содержит таймер (признак активного звонка)
+            for (const element of elements) {
+                if (element.querySelector('[role="timer"]') || element.querySelector('[class*="timer"]')) {
+                    callContainer = element;
+                    break;
+                }
             }
+            if (callContainer) break;
         }
         
         if (!callContainer) {
-            console.error('❌ CallTracker: Не удалось найти контейнер звонка');
-            this.stats.errors++;
-            this.debugFindElements();
+            // Не логируем ошибку каждую секунду, только раз в 10 секунд
+            if (this.stats.callsMonitored % 10 === 0) {
+                console.log('⏳ Ищу контейнер активного звонка...');
+            }
             return;
         }
         
-        // Ищем элементы с данными с помощью гибких селекторов
+        // Ищем элементы с данными
         const phoneEl = this.findElementBySelectors(callContainer, [
             '[aria-label*="Участник"]',
             '[aria-label*="участник"]',
@@ -228,15 +304,17 @@ class CallEndTracker {
             '[aria-label*="Phone"]',
             '[class*="participant"]',
             '[class*="phone-number"]',
-            '.callcontrol-participant-number'
+            '.callcontrol-participant-number',
+            '[class*="participant-number"]'
         ]);
         
         const durationEl = this.findElementBySelectors(callContainer, [
             '[role="timer"]',
-            '[class*="timer"]',
+            '[class*="timer"]:not([class*="header-timer"])',
             '[class*="duration"]',
             '.call-timer',
-            '#call-timer'
+            '#call-timer',
+            '[id*="call-timer"]'
         ]);
         
         const regionEl = this.findElementBySelectors(callContainer, [
@@ -245,31 +323,32 @@ class CallEndTracker {
             '[class*="callVariableValue"] span',
             '[class*="call-variable"]',
             '[class*="region"]',
-            '.call-info-value'
+            '.call-info-value',
+            '[class*="callVariable"] span'
         ]);
 
         // Извлекаем данные
-        const phone = phoneEl?.textContent?.trim() || 'Не найден';
-        const duration = durationEl?.textContent?.trim() || 'Не найдена';
-        const region = regionEl?.textContent?.trim() || 'Не найден';
+        const phone = phoneEl?.textContent?.trim() || this.currentCallData?.phone || 'Не найден';
+        const duration = durationEl?.textContent?.trim() || '00:00:00';
+        const region = regionEl?.textContent?.trim() || this.currentCallData?.region || 'Не найден';
 
-        const callData = {
-            phone: phone,
-            duration: duration,
-            region: region,
-            capturedAt: new Date().toLocaleTimeString(),
-            capturedDate: new Date().toISOString()
-        };
-
-        this.lastEndedCallData = callData;
-        console.log('✅ CallTracker: Данные последнего звонка зафиксированы:', callData);
-        this.stats.callsTracked++;
-        
-        // ВАЖНО: Сохраняем в localStorage и историю
-        this.saveToLocalStorage(callData);
-        
-        // Показываем уведомление
-        this.showNotification('Данные звонка сохранены');
+        // Обновляем текущие данные только если нашли хотя бы телефон или длительность
+        if (phoneEl || durationEl) {
+            this.currentCallData = {
+                phone: phone,
+                duration: duration,
+                region: region,
+                capturedAt: new Date().toLocaleTimeString(),
+                capturedDate: new Date().toISOString()
+            };
+            
+            this.stats.callsMonitored++;
+            
+            // Логируем только при изменении данных
+            if (this.stats.callsMonitored === 1 || this.stats.callsMonitored % 10 === 0) {
+                console.log('📊 Данные активного звонка:', this.currentCallData);
+            }
+        }
     }
     
     /**
@@ -280,7 +359,6 @@ class CallEndTracker {
             try {
                 const element = container.querySelector(selector);
                 if (element && element.textContent) {
-                    console.log(`  ✓ Найден элемент по селектору: ${selector}`);
                     return element;
                 }
             } catch (e) {
@@ -302,7 +380,7 @@ class CallEndTracker {
             const dataWithMeta = {
                 ...data,
                 savedAt: Date.now(),
-                extensionVersion: '2.1'
+                extensionVersion: '3.0'
             };
             
             // Сохраняем как последний звонок
@@ -323,7 +401,6 @@ class CallEndTracker {
             
             // Логируем для отладки
             console.log('📦 Сохраненные данные:', dataWithMeta);
-            console.log('📚 История звонков:', this.callHistory);
             
         } catch (e) {
             console.error('❌ Ошибка сохранения в localStorage:', e);
@@ -391,6 +468,13 @@ class CallEndTracker {
             }
         });
         
+        // Специальный поиск таймеров
+        console.log('\n🕐 Поиск таймеров:');
+        const timers = document.querySelectorAll('[role="timer"], [class*="timer"]');
+        timers.forEach((timer, i) => {
+            console.log(`  Timer ${i + 1}: ${timer.textContent} (${timer.className})`);
+        });
+        
         console.groupEnd();
     }
     
@@ -415,16 +499,20 @@ class CallEndTracker {
                 box-shadow: 0 2px 5px rgba(0,0,0,0.2);
                 transition: all 0.3s ease;
             `;
-            indicator.innerHTML = '✅ Oprosnik Helper активен<br><small>Клик для информации</small>';
+            indicator.innerHTML = '✅ Oprosnik Helper v3.0<br><small>Клик для информации</small>';
             
             indicator.onclick = () => {
                 const info = `
 Статистика:
 - Изменений статуса: ${this.stats.statusChanges}
-- Отслежено звонков: ${this.stats.callsTracked}
+- Завершено звонков: ${this.stats.callsTracked}
+- Проверок активного звонка: ${this.stats.callsMonitored}
 - Попыток сохранения: ${this.stats.saveAttempts}
 - Ошибок сохранения: ${this.stats.saveErrors}
 - Звонков в истории: ${this.callHistory.length}
+
+Текущий звонок:
+${this.currentCallData ? JSON.stringify(this.currentCallData, null, 2) : 'Нет активного звонка'}
 
 Последний звонок:
 ${this.lastEndedCallData ? JSON.stringify(this.lastEndedCallData, null, 2) : 'Нет данных'}
@@ -543,6 +631,6 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-console.log('✅ Oprosnik Helper: Parser полностью загружен и готов к работе');
+console.log('✅ Oprosnik Helper: Parser v3.0 полностью загружен и готов к работе');
 console.log('📊 URL:', window.location.href);
 console.log('🆔 Extension ID:', chrome.runtime?.id);
