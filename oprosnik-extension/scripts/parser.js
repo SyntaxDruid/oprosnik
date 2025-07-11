@@ -26,7 +26,7 @@ class CallEndTracker {
         this.lastEndedCallData = null;
         
         // Статусы завершения разговора
-        this.endCallStatuses = ['Поствызов', 'Готов', 'Ready', 'Not Ready', 'Wrap Up'];
+        this.endCallStatuses = ['Поствызов', 'Готов'];
         
         // Предыдущий статус агента
         this.previousAgentStatus = null;
