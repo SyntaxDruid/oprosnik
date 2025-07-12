@@ -86,7 +86,7 @@ class FinesseActiveMonitor {
         try {
             const results = await chrome.scripting.executeScript({
                 target: { tabId: this.finesseTabId },
-                func: this.extractAgentStatus,
+                func: FinesseActiveMonitor.extractAgentStatus,
                 world: 'MAIN'
             });
             
@@ -100,7 +100,7 @@ class FinesseActiveMonitor {
     }
     
     // Функция для выполнения на странице - извлечение статуса
-    extractAgentStatus() {
+    static extractAgentStatus() {
         const statusEl = document.querySelector('#voice-state-select-headerOptionText');
         return {
             status: statusEl ? statusEl.textContent.trim() : null,
@@ -156,7 +156,7 @@ class FinesseActiveMonitor {
         try {
             const results = await chrome.scripting.executeScript({
                 target: { tabId: this.finesseTabId },
-                func: this.extractCallData,
+                func: FinesseActiveMonitor.extractCallData,
                 world: 'MAIN'
             });
             
@@ -173,7 +173,7 @@ class FinesseActiveMonitor {
     }
     
     // Функция для выполнения на странице - извлечение данных звонка
-    extractCallData() {
+    static extractCallData() {
         const data = {
             phone: null,
             duration: null,
