@@ -169,25 +169,7 @@ function showCallHistoryModal(callHistory) {
     
     modal.appendChild(callList);
     
-    // Кнопка закрытия
-    const closeButton = document.createElement('button');
-    closeButton.textContent = 'Отмена';
-    closeButton.style.cssText = `
-        margin-top: 20px;
-        padding: 10px 20px;
-        background: #666;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        width: 100%;
-    `;
-    closeButton.onclick = () => document.body.removeChild(overlay);
-    modal.appendChild(closeButton);
-    
-    overlay.appendChild(modal);
-    document.body.appendChild(overlay);
-    
+
     // Закрытие по клику на оверлей
     overlay.onclick = (e) => {
         if (e.target === overlay) {
