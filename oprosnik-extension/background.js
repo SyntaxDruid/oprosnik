@@ -28,17 +28,38 @@ function extractCallData() {
         data.phone = phoneEl.textContent.trim();
     }
     
-    // Ищем таймер по role="timer"
-    const timerEl = document.querySelector('[role="timer"]');
-    if (timerEl) {
-        data.duration = timerEl.textContent.trim();
+    // Улучшенный поиск таймера - несколько способов
+    const timerSelectors = [
+        '[role="timer"]',
+        '[class*="timer-timer"]',
+        '[id*="call-timer"]',
+        '[aria-label*="Общее время"]'
+    ];
+    
+    for (const selector of timerSelectors) {
+        const timerEl = document.querySelector(selector);
+        if (timerEl && timerEl.textContent.trim()) {
+            const timerText = timerEl.textContent.trim();
+            // Проверяем, что это похоже на время (формат ЧЧ:ММ:СС)
+            if (/\d{2}:\d{2}:\d{2}/.test(timerText)) {
+                data.duration = timerText;
+                console.log(`⏱️ Время найдено через селектор ${selector}: ${timerText}`);
+                break;
+            }
+        }
     }
     
-    // Альтернативный поиск таймера по классу
+    // Дополнительный поиск времени в aria-label
     if (!data.duration) {
-        const timerAltEl = document.querySelector('[class*="timer-timer"]');
-        if (timerAltEl) {
-            data.duration = timerAltEl.textContent.trim();
+        const allElements = document.querySelectorAll('[aria-label*="время"]');
+        for (const el of allElements) {
+            const ariaLabel = el.getAttribute('aria-label');
+            const timeMatch = ariaLabel.match(/(\d{2}:\d{2}:\d{2})/);
+            if (timeMatch) {
+                data.duration = timeMatch[1];
+                console.log(`⏱️ Время найдено в aria-label: ${data.duration}`);
+                break;
+            }
         }
     }
     
@@ -55,6 +76,14 @@ function extractCallData() {
             data.region = regionAltEl.textContent.trim();
         }
     }
+    
+    // Логирование для отладки
+    console.log('📊 Извлеченные данные:', {
+        phone: data.phone,
+        duration: data.duration,
+        region: data.region,
+        foundTimerElements: document.querySelectorAll('[role="timer"], [class*="timer"], [id*="timer"]').length
+    });
     
     return data;
 }
@@ -178,6 +207,17 @@ class FinesseActiveMonitor {
                 this.startPostCallCapture();
             }
             
+            // Переход в статус "Готов" после звонка
+            if (previousStatus === 'Завершение' && currentStatus === 'Готов') {
+                console.log('✅ Агент готов к новым звонкам');
+                // Делаем дополнительный захват данных в статусе "Готов"
+                // В этом статусе данные могут быть ещё доступны
+                setTimeout(async () => {
+                    console.log('📊 Дополнительный захват в статусе "Готов"');
+                    await this.captureCallData();
+                }, 500);
+            }
+            
             this.lastAgentStatus = currentStatus;
         }
     }
@@ -230,7 +270,7 @@ class FinesseActiveMonitor {
         
         // Делаем быстрые попытки захвата финальных данных
         let captureAttempts = 0;
-        const maxAttempts = 3; // Сократили до 3 попыток
+        const maxAttempts = 4; // Увеличили до 4 попыток для лучшего захвата времени
         
         const attemptCapture = async () => {
             captureAttempts++;
@@ -239,30 +279,38 @@ class FinesseActiveMonitor {
             const previousData = this.currentCallData ? {...this.currentCallData} : null;
             await this.captureCallData();
             
-            // Проверяем, изменились ли данные (особенно длительность)
+            // Проверяем качество захваченных данных
+            const hasValidDuration = this.currentCallData?.duration && 
+                                   this.currentCallData.duration !== '00:00:00' &&
+                                   /\d{2}:\d{2}:\d{2}/.test(this.currentCallData.duration);
+            
             const dataChanged = !previousData || 
                                 previousData.duration !== this.currentCallData?.duration ||
                                 previousData.phone !== this.currentCallData?.phone;
             
-            if (dataChanged) {
-                console.log('✅ Данные обновились, фиксируем');
+            // Фиксируем, если получили валидную длительность или данные изменились
+            if (hasValidDuration && dataChanged) {
+                console.log('✅ Получена валидная длительность, фиксируем:', this.currentCallData.duration);
                 await this.finalizeCall();
                 return;
             }
             
-            // Если данные не изменились и это последняя попытка - фиксируем что есть
+            // Если это последняя попытка - фиксируем что есть
             if (captureAttempts >= maxAttempts) {
                 console.log('⏰ Финальная попытка, фиксируем имеющиеся данные');
+                if (!hasValidDuration) {
+                    console.warn('⚠️ Не удалось получить валидную длительность звонка');
+                }
                 await this.finalizeCall();
                 return;
             }
             
             // Делаем следующую попытку через короткий интервал
-            setTimeout(attemptCapture, 200); // Уменьшили интервал до 200мс
+            setTimeout(attemptCapture, 300); // Немного увеличили интервал
         };
         
         // Начинаем с небольшой задержки, чтобы данные успели обновиться
-        setTimeout(attemptCapture, 100);
+        setTimeout(attemptCapture, 150);
     }
     
     // Финализация и сохранение звонка
