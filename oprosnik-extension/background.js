@@ -22,30 +22,38 @@ function extractCallData() {
         timestamp: Date.now()
     };
     
-    // Ищем контейнеры звонка
-    const containers = document.querySelectorAll('[class*="callcontrol-grid-cell"]');
+    // Ищем номер телефона
+    const phoneEl = document.querySelector('[aria-label*="Участник"]');
+    if (phoneEl) {
+        data.phone = phoneEl.textContent.trim();
+    }
     
-    for (const container of containers) {
-        // Ищем номер телефона
-        const phoneEl = container.querySelector('[aria-label*="Участник"]');
-        if (phoneEl) {
-            data.phone = phoneEl.textContent.trim();
+    // Ищем таймер по role="timer"
+    const timerEl = document.querySelector('[role="timer"]');
+    if (timerEl) {
+        data.duration = timerEl.textContent.trim();
+    }
+    
+    // Альтернативный поиск таймера по классу
+    if (!data.duration) {
+        const timerAltEl = document.querySelector('[class*="timer-timer"]');
+        if (timerAltEl) {
+            data.duration = timerAltEl.textContent.trim();
         }
-        
-        // Ищем таймер
-        const timerEl = container.querySelector('[role="timer"]');
-        if (timerEl) {
-            data.duration = timerEl.textContent.trim();
+    }
+    
+    // Ищем регион в call variable value
+    const regionEl = document.querySelector('[class*="callVariableValue"] span');
+    if (regionEl) {
+        data.region = regionEl.textContent.trim();
+    }
+    
+    // Альтернативный поиск региона по id
+    if (!data.region) {
+        const regionAltEl = document.querySelector('[id*="call-header-variable-value"]');
+        if (regionAltEl) {
+            data.region = regionAltEl.textContent.trim();
         }
-        
-        // Ищем регион
-        const regionEl = container.querySelector('[class*="callVariableValue"] span');
-        if (regionEl) {
-            data.region = regionEl.textContent.trim();
-        }
-        
-        // Если нашли хотя бы что-то, прерываем поиск
-        if (data.phone || data.duration) break;
     }
     
     return data;
