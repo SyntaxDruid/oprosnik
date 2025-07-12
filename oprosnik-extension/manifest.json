@@ -4,9 +4,11 @@
   "version": "3.2",
   "description": "Помогает с заполнением опросника, копирует данные из файнес.",
   "permissions": [
+    "alarms",
     "storage",
     "tabs",
-    "scripting"
+    "scripting",
+    "notifications"
   ],
   "host_permissions": [
     "https://ctp.rt.ru/*",
