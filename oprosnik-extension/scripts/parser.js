@@ -27,15 +27,15 @@ class CallEndTracker {
         // Данные текущего активного звонка
         this.currentCallData = null;
         
-        // История звонков (храним последние 5)
+        // История звонков (храним последние 4)
         this.callHistory = [];
-        this.maxHistorySize = 5;
+        this.maxHistorySize = 4;
         
         // Статусы завершения разговора
-        this.endCallStatuses = ['Поствызов', 'Готов', 'Ready', 'Not Ready', 'Wrap Up'];
+        this.endCallStatuses = ['Завершение'];
         
         // Статусы активного разговора
-        this.activeCallStatuses = ['Разговор', 'Talking', 'On Call', 'Connected'];
+        this.activeCallStatuses = ['Разговор'];
         
         // Предыдущий статус агента
         this.previousAgentStatus = null;
