@@ -98,11 +98,26 @@ class FinesseActiveMonitor {
         this.lastAgentStatus = null;
         this.isInCall = false;
         
+        // Отслеживание времени звонка
+        this.callStartTime = null;
+        this.callEndTime = null;
+        this.calculatedDuration = null;
+        
         // Интервалы мониторинга
         this.statusCheckInterval = 3000; // Проверка статуса каждые 3 сек
         this.activeCallInterval = 1000;  // Во время звонка каждую секунду
         
         this.init();
+    }
+    
+    // Форматирование длительности из миллисекунд в ЧЧ:ММ:СС
+    formatDuration(ms) {
+        const totalSeconds = Math.floor(ms / 1000);
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        
+        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     }
     
     async init() {
@@ -198,12 +213,21 @@ class FinesseActiveMonitor {
             if (currentStatus === 'Разговор' && !this.isInCall) {
                 console.log('🔔 Начат новый звонок!');
                 this.isInCall = true;
+                this.callStartTime = Date.now();
+                this.callEndTime = null;
+                this.calculatedDuration = null;
+                console.log('⏰ Время начала звонка зафиксировано:', new Date(this.callStartTime).toLocaleTimeString());
                 this.startActiveCallMonitoring();
             }
             
             // Завершение звонка
             if (previousStatus === 'Разговор' && currentStatus === 'Завершение') {
+                this.callEndTime = Date.now();
+                const callDurationMs = this.callEndTime - this.callStartTime;
+                this.calculatedDuration = this.formatDuration(callDurationMs);
                 console.log('☎️ Звонок завершается...');
+                console.log('⏰ Время окончания звонка:', new Date(this.callEndTime).toLocaleTimeString());
+                console.log('📊 Вычисленная длительность:', this.calculatedDuration);
                 this.startPostCallCapture();
             }
             
@@ -259,74 +283,82 @@ class FinesseActiveMonitor {
     }
     
     
-    // Пост-звонковый захват (быстрая фиксация финальных данных)
+    // Быстрый захват в статусе "Завершение" - только первые 0-3 секунды
     async startPostCallCapture() {
-        console.log('🔄 Запуск пост-звонкового захвата');
+        console.log('🔄 Запуск быстрого захвата в статусе "Завершение"');
         
         this.isInCall = false;
         
         // Останавливаем активный мониторинг
         chrome.alarms.clear('activeCallMonitor');
         
-        // Делаем быстрые попытки захвата финальных данных
+        // Быстрые попытки захвата только в первые 3 секунды статуса "Завершение"
         let captureAttempts = 0;
-        const maxAttempts = 4; // Увеличили до 4 попыток для лучшего захвата времени
+        const maxAttempts = 3; // Только 3 быстрых попытки
+        const captureWindow = 3000; // Окно захвата 3 секунды
+        const startTime = Date.now();
         
         const attemptCapture = async () => {
-            captureAttempts++;
-            console.log(`📸 Финальная попытка захвата ${captureAttempts}/${maxAttempts}`);
+            const elapsed = Date.now() - startTime;
             
-            const previousData = this.currentCallData ? {...this.currentCallData} : null;
+            // Проверяем, не вышли ли за окно захвата
+            if (elapsed > captureWindow) {
+                console.log('⏰ Окно захвата (3 сек) истекло, используем вычисленную длительность');
+                await this.finalizeCallWithCalculatedDuration();
+                return;
+            }
+            
+            captureAttempts++;
+            console.log(`📸 Быстрый захват ${captureAttempts}/${maxAttempts} (${elapsed}мс от начала "Завершение")`);
+            
             await this.captureCallData();
             
-            // Проверяем качество захваченных данных
+            // Проверяем, получили ли финальное время из интерфейса
             const hasValidDuration = this.currentCallData?.duration && 
                                    this.currentCallData.duration !== '00:00:00' &&
                                    /\d{2}:\d{2}:\d{2}/.test(this.currentCallData.duration);
             
-            const dataChanged = !previousData || 
-                                previousData.duration !== this.currentCallData?.duration ||
-                                previousData.phone !== this.currentCallData?.phone;
-            
-            // Фиксируем, если получили валидную длительность или данные изменились
-            if (hasValidDuration && dataChanged) {
-                console.log('✅ Получена валидная длительность, фиксируем:', this.currentCallData.duration);
+            if (hasValidDuration) {
+                console.log('✅ Получено финальное время из интерфейса:', this.currentCallData.duration);
                 await this.finalizeCall();
                 return;
             }
             
-            // Если это последняя попытка - фиксируем что есть
+            // Если это последняя попытка или истекло время - используем вычисленную длительность
             if (captureAttempts >= maxAttempts) {
-                console.log('⏰ Финальная попытка, фиксируем имеющиеся данные');
-                if (!hasValidDuration) {
-                    console.warn('⚠️ Не удалось получить валидную длительность звонка');
-                }
-                await this.finalizeCall();
+                console.log('⏰ Исчерпаны попытки быстрого захвата, используем вычисленную длительность');
+                await this.finalizeCallWithCalculatedDuration();
                 return;
             }
             
-            // Делаем следующую попытку через короткий интервал
-            setTimeout(attemptCapture, 300); // Немного увеличили интервал
+            // Следующая попытка через 100мс (очень быстро)
+            setTimeout(attemptCapture, 100);
         };
         
-        // Начинаем с небольшой задержки, чтобы данные успели обновиться
-        setTimeout(attemptCapture, 150);
+        // Начинаем сразу, без задержки
+        attemptCapture();
     }
     
-    // Финализация и сохранение звонка
-    async finalizeCall() {
-        if (!this.currentCallData) {
-            console.warn('⚠️ Нет данных для сохранения');
-            return;
-        }
+    // Финализация с использованием вычисленной длительности
+    async finalizeCallWithCalculatedDuration() {
+        // Используем данные из currentCallData, но заменяем длительность на вычисленную
+        const callData = {
+            phone: this.currentCallData?.phone || 'Неизвестно',
+            duration: this.calculatedDuration || '00:00:00',
+            region: this.currentCallData?.region || 'Не указан',
+            timestamp: Date.now(),
+            source: 'calculated' // Помечаем, что длительность вычислена
+        };
         
-        console.log('💾 Финализация звонка:', this.currentCallData);
+        console.log('💾 Финализация с вычисленной длительностью:', callData);
         
         // Добавляем метаданные
         const finalCallData = {
-            ...this.currentCallData,
+            ...callData,
             completedAt: new Date().toISOString(),
-            savedAt: Date.now()
+            savedAt: Date.now(),
+            callStartTime: this.callStartTime,
+            callEndTime: this.callEndTime
         };
         
         // Добавляем в историю
@@ -338,10 +370,52 @@ class FinesseActiveMonitor {
         // Сохраняем в chrome.storage
         await this.saveData();
         
-        // Очищаем текущие данные
+        // Очищаем данные звонка
         this.currentCallData = null;
+        this.callStartTime = null;
+        this.callEndTime = null;
+        this.calculatedDuration = null;
         
-        console.log('✅ Звонок сохранен в историю');
+        console.log('✅ Звонок сохранен с вычисленной длительностью');
+    }
+    
+    // Финализация и сохранение звонка (с данными из интерфейса)
+    async finalizeCall() {
+        if (!this.currentCallData) {
+            console.warn('⚠️ Нет данных для сохранения, используем вычисленную длительность');
+            await this.finalizeCallWithCalculatedDuration();
+            return;
+        }
+        
+        console.log('💾 Финализация звонка с данными из интерфейса:', this.currentCallData);
+        
+        // Добавляем метаданные
+        const finalCallData = {
+            ...this.currentCallData,
+            completedAt: new Date().toISOString(),
+            savedAt: Date.now(),
+            source: 'interface', // Помечаем, что данные из интерфейса
+            callStartTime: this.callStartTime,
+            callEndTime: this.callEndTime,
+            calculatedDuration: this.calculatedDuration // Сохраняем и вычисленную для сравнения
+        };
+        
+        // Добавляем в историю
+        this.callHistory.unshift(finalCallData);
+        if (this.callHistory.length > 10) {
+            this.callHistory = this.callHistory.slice(0, 10);
+        }
+        
+        // Сохраняем в chrome.storage
+        await this.saveData();
+        
+        // Очищаем данные звонка
+        this.currentCallData = null;
+        this.callStartTime = null;
+        this.callEndTime = null;
+        this.calculatedDuration = null;
+        
+        console.log('✅ Звонок сохранен с данными из интерфейса');
     }
     
     // Сохранение данных в chrome.storage
