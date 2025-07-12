@@ -492,7 +492,7 @@ function pasteDataIntoComment(callData) {
 /**
  * Вставляет данные в указанное поле
  */
-function insertDataIntoField(callData) {
+function insertDataIntoField(field, callData) {
     // Форматируем данные в красивую строку для вставки
     const formattedData = `
 Номер телефона: ${callData.phone}
