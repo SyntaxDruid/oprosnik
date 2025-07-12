@@ -28,37 +28,88 @@ function extractCallData() {
         data.phone = phoneEl.textContent.trim();
     }
     
-    // Улучшенный поиск таймера - несколько способов
-    const timerSelectors = [
-        '[role="timer"]',
-        '[class*="timer-timer"]',
-        '[id*="call-timer"]',
-        '[aria-label*="Общее время"]'
+    // Подробная диагностика всех элементов с таймерами
+    console.log('🔍 Диагностика элементов таймера:');
+    
+    // Все элементы с role="timer"
+    const timerRoleElements = document.querySelectorAll('[role="timer"]');
+    console.log('Элементы с role="timer":', timerRoleElements.length);
+    timerRoleElements.forEach((el, i) => {
+        console.log(`Timer ${i}:`, {
+            id: el.id,
+            textContent: el.textContent,
+            ariaLabel: el.getAttribute('aria-label'),
+            classes: el.className
+        });
+    });
+    
+    // Все элементы с классами timer
+    const timerClassElements = document.querySelectorAll('[class*="timer"]');
+    console.log('Элементы с классом timer:', timerClassElements.length);
+    timerClassElements.forEach((el, i) => {
+        const text = el.textContent.trim();
+        if (/\d{2}:\d{2}:\d{2}/.test(text)) {
+            console.log(`Timer class ${i} (валидное время):`, {
+                id: el.id,
+                textContent: text,
+                classes: el.className
+            });
+        }
+    });
+    
+    // Специфические селекторы на основе HTML структуры
+    const specificSelectors = [
+        '[role="timer"]',                                    // Основной селектор
+        '[class*="timer-timer"]',                           // По классу
+        '[id*="call-timer"]',                               // По ID
+        '[aria-label*="Общее время"]',                      // По aria-label
+        '.callcontrol-timer-7KaNm [role="timer"]',          // Более специфичный
+        '[id$="call-timer"]',                               // ID заканчивается на call-timer
+        '.timer-timer-2ZG4P',                               // Точный класс из HTML
+        '[class*="callcontrol-timer"] [role="timer"]'       // Комбинированный селектор
     ];
     
-    for (const selector of timerSelectors) {
-        const timerEl = document.querySelector(selector);
-        if (timerEl && timerEl.textContent.trim()) {
-            const timerText = timerEl.textContent.trim();
-            // Проверяем, что это похоже на время (формат ЧЧ:ММ:СС)
-            if (/\d{2}:\d{2}:\d{2}/.test(timerText)) {
-                data.duration = timerText;
-                console.log(`⏱️ Время найдено через селектор ${selector}: ${timerText}`);
-                break;
+    for (const selector of specificSelectors) {
+        try {
+            const timerEl = document.querySelector(selector);
+            if (timerEl && timerEl.textContent.trim()) {
+                const timerText = timerEl.textContent.trim();
+                console.log(`Проверяем селектор ${selector}: "${timerText}"`);
+                
+                // Проверяем, что это похоже на время (формат ЧЧ:ММ:СС)
+                if (/\d{2}:\d{2}:\d{2}/.test(timerText)) {
+                    data.duration = timerText;
+                    console.log(`✅ Время найдено через селектор ${selector}: ${timerText}`);
+                    break;
+                }
             }
+        } catch (e) {
+            console.log(`❌ Ошибка с селектором ${selector}:`, e.message);
         }
     }
     
-    // Дополнительный поиск времени в aria-label
+    // Поиск всех элементов содержащих время
     if (!data.duration) {
-        const allElements = document.querySelectorAll('[aria-label*="время"]');
+        console.log('🔍 Поиск времени во всех элементах...');
+        const allElements = document.querySelectorAll('*');
+        let found = false;
+        
         for (const el of allElements) {
-            const ariaLabel = el.getAttribute('aria-label');
-            const timeMatch = ariaLabel.match(/(\d{2}:\d{2}:\d{2})/);
-            if (timeMatch) {
-                data.duration = timeMatch[1];
-                console.log(`⏱️ Время найдено в aria-label: ${data.duration}`);
-                break;
+            const text = el.textContent?.trim() || '';
+            if (/^\d{2}:\d{2}:\d{2}$/.test(text)) {
+                console.log('📍 Найден элемент с временем:', {
+                    text: text,
+                    id: el.id,
+                    className: el.className,
+                    tagName: el.tagName,
+                    ariaLabel: el.getAttribute('aria-label'),
+                    role: el.getAttribute('role')
+                });
+                
+                if (!found) {
+                    data.duration = text;
+                    found = true;
+                }
             }
         }
     }
@@ -77,12 +128,12 @@ function extractCallData() {
         }
     }
     
-    // Логирование для отладки
-    console.log('📊 Извлеченные данные:', {
+    // Финальное логирование
+    console.log('📊 Финальные извлеченные данные:', {
         phone: data.phone,
         duration: data.duration,
         region: data.region,
-        foundTimerElements: document.querySelectorAll('[role="timer"], [class*="timer"], [id*="timer"]').length
+        success: !!(data.phone && data.duration && data.region)
     });
     
     return data;
