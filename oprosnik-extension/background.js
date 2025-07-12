@@ -1,196 +1,360 @@
 /**
- * background.js - Версия с диагностикой и автоинъекцией
- * "Мозговой центр" расширения.
- * Координирует обмен данными между вкладками.
+ * background.js - Версия с активным мониторингом
+ * Основная логика парсинга перенесена в background service worker
  */
 
-console.log('🚀 Oprosnik Helper: Background Service Worker Started.', new Date().toISOString());
+console.log('🚀 Background Service Worker с активным мониторингом запущен');
 
-// Добавляем слушатель для отслеживания установки/обновления расширения
-chrome.runtime.onInstalled.addListener((details) => {
-    console.log('📦 Расширение установлено/обновлено:', details.reason);
-    
-    // При обновлении показываем уведомление
-    if (details.reason === 'update') {
-        console.log('🔄 Расширение обновлено. Необходимо перезагрузить страницы.');
+// Основной класс для мониторинга Finesse
+class FinesseActiveMonitor {
+    constructor() {
+        this.finesseTabId = null;
+        this.monitoringActive = false;
+        this.currentCallData = null;
+        this.callHistory = [];
+        this.lastAgentStatus = null;
+        this.isInCall = false;
+        
+        // Интервалы мониторинга
+        this.statusCheckInterval = 3000; // Проверка статуса каждые 3 сек
+        this.activeCallInterval = 1000;  // Во время звонка каждую секунду
+        
+        this.init();
     }
-});
-
-// Функция для проверки, загружен ли content script
-async function isContentScriptLoaded(tabId) {
-    try {
-        // Пробуем отправить тестовое сообщение
-        const response = await chrome.tabs.sendMessage(tabId, { action: 'ping' });
-        return true;
-    } catch (error) {
-        return false;
-    }
-}
-
-// Функция для программной инъекции скриптов
-async function injectContentScripts(tabId) {
-    console.log(`💉 Инъекция content scripts в табу ${tabId}...`);
     
-    try {
-        // Сначала инъектируем parser.js
-        await chrome.scripting.executeScript({
-            target: { tabId: tabId },
-            files: ['scripts/parser.js']
+    async init() {
+        console.log('📡 Инициализация FinesseActiveMonitor...');
+        
+        // Загружаем сохраненные данные
+        await this.loadStoredData();
+        
+        // Находим вкладку Finesse
+        await this.findFinesseTab();
+        
+        // Создаем alarm для периодической проверки
+        chrome.alarms.create('finesseStatusCheck', {
+            periodInMinutes: 0.05 // каждые 3 секунды
         });
         
-        console.log('✅ parser.js успешно инъектирован');
-        return true;
-    } catch (error) {
-        console.error('❌ Ошибка инъекции скрипта:', error);
+        // Слушаем изменения вкладок
+        chrome.tabs.onUpdated.addListener(this.handleTabUpdate.bind(this));
+        chrome.tabs.onRemoved.addListener(this.handleTabRemoved.bind(this));
+    }
+    
+    async findFinesseTab() {
+        const tabs = await chrome.tabs.query({
+            url: "https://ssial000ap008.si.rt.ru:8445/desktop/container/*"
+        });
+        
+        if (tabs.length > 0) {
+            this.finesseTabId = tabs[0].id;
+            console.log('✅ Найдена вкладка Finesse:', this.finesseTabId);
+            this.monitoringActive = true;
+            return true;
+        }
+        
+        console.log('❌ Вкладка Finesse не найдена');
+        this.monitoringActive = false;
         return false;
+    }
+    
+    // Обработка обновления вкладок
+    handleTabUpdate(tabId, changeInfo, tab) {
+        if (tabId === this.finesseTabId && changeInfo.status === 'complete') {
+            console.log('🔄 Вкладка Finesse перезагружена');
+            // Даем время на загрузку страницы
+            setTimeout(() => this.checkAgentStatus(), 3000);
+        }
+    }
+    
+    // Обработка закрытия вкладок
+    handleTabRemoved(tabId) {
+        if (tabId === this.finesseTabId) {
+            console.log('❌ Вкладка Finesse закрыта');
+            this.finesseTabId = null;
+            this.monitoringActive = false;
+        }
+    }
+    
+    // Основная функция проверки статуса агента
+    async checkAgentStatus() {
+        if (!this.monitoringActive || !this.finesseTabId) {
+            await this.findFinesseTab();
+            if (!this.finesseTabId) return;
+        }
+        
+        try {
+            const results = await chrome.scripting.executeScript({
+                target: { tabId: this.finesseTabId },
+                func: this.extractAgentStatus,
+                world: 'MAIN'
+            });
+            
+            if (results && results[0] && results[0].result) {
+                await this.processStatusData(results[0].result);
+            }
+        } catch (error) {
+            console.error('❌ Ошибка при проверке статуса:', error);
+            this.monitoringActive = false;
+        }
+    }
+    
+    // Функция для выполнения на странице - извлечение статуса
+    extractAgentStatus() {
+        const statusEl = document.querySelector('#voice-state-select-headerOptionText');
+        return {
+            status: statusEl ? statusEl.textContent.trim() : null,
+            timestamp: Date.now()
+        };
+    }
+    
+    // Обработка данных статуса
+    async processStatusData(data) {
+        if (!data.status) return;
+        
+        const currentStatus = data.status;
+        const previousStatus = this.lastAgentStatus;
+        
+        // Проверяем изменение статуса
+        if (currentStatus !== previousStatus) {
+            console.log(`📞 Статус изменился: ${previousStatus} → ${currentStatus}`);
+            
+            // Начало разговора
+            if (currentStatus === 'Разговор' && !this.isInCall) {
+                console.log('🔔 Начат новый звонок!');
+                this.isInCall = true;
+                this.startActiveCallMonitoring();
+            }
+            
+            // Завершение звонка
+            if (previousStatus === 'Разговор' && currentStatus === 'Завершение') {
+                console.log('☎️ Звонок завершается...');
+                this.startPostCallCapture();
+            }
+            
+            this.lastAgentStatus = currentStatus;
+        }
+    }
+    
+    // Начинаем активный мониторинг звонка
+    startActiveCallMonitoring() {
+        console.log('🎯 Запуск активного мониторинга звонка');
+        
+        // Создаем более частый alarm
+        chrome.alarms.create('activeCallMonitor', {
+            periodInMinutes: 0.0167 // каждую секунду
+        });
+        
+        // Сразу делаем первый захват
+        this.captureCallData();
+    }
+    
+    // Захват данных активного звонка
+    async captureCallData() {
+        if (!this.finesseTabId) return;
+        
+        try {
+            const results = await chrome.scripting.executeScript({
+                target: { tabId: this.finesseTabId },
+                func: this.extractCallData,
+                world: 'MAIN'
+            });
+            
+            if (results && results[0] && results[0].result) {
+                const callData = results[0].result;
+                if (callData.phone || callData.duration) {
+                    this.currentCallData = callData;
+                    console.log('📊 Данные звонка обновлены:', callData);
+                }
+            }
+        } catch (error) {
+            console.error('❌ Ошибка захвата данных звонка:', error);
+        }
+    }
+    
+    // Функция для выполнения на странице - извлечение данных звонка
+    extractCallData() {
+        const data = {
+            phone: null,
+            duration: null,
+            region: null,
+            timestamp: Date.now()
+        };
+        
+        // Ищем контейнеры звонка
+        const containers = document.querySelectorAll('[class*="callcontrol-grid-cell"]');
+        
+        for (const container of containers) {
+            // Ищем номер телефона
+            const phoneEl = container.querySelector('[aria-label*="Участник"]');
+            if (phoneEl) {
+                data.phone = phoneEl.textContent.trim();
+            }
+            
+            // Ищем таймер
+            const timerEl = container.querySelector('[role="timer"]');
+            if (timerEl) {
+                data.duration = timerEl.textContent.trim();
+            }
+            
+            // Ищем регион
+            const regionEl = container.querySelector('[class*="callVariableValue"] span');
+            if (regionEl) {
+                data.region = regionEl.textContent.trim();
+            }
+            
+            // Если нашли хотя бы что-то, прерываем поиск
+            if (data.phone || data.duration) break;
+        }
+        
+        return data;
+    }
+    
+    // Пост-звонковый захват (усиленный мониторинг после завершения)
+    async startPostCallCapture() {
+        console.log('🔄 Запуск пост-звонкового захвата');
+        
+        this.isInCall = false;
+        let captureAttempts = 0;
+        const maxAttempts = 10;
+        
+        // Останавливаем активный мониторинг
+        chrome.alarms.clear('activeCallMonitor');
+        
+        // Делаем несколько попыток захвата с интервалом
+        const captureInterval = setInterval(async () => {
+            captureAttempts++;
+            console.log(`📸 Попытка захвата ${captureAttempts}/${maxAttempts}`);
+            
+            await this.captureCallData();
+            
+            if (captureAttempts >= maxAttempts) {
+                clearInterval(captureInterval);
+                await this.finalizeCall();
+            }
+        }, 500); // каждые 500мс
+    }
+    
+    // Финализация и сохранение звонка
+    async finalizeCall() {
+        if (!this.currentCallData) {
+            console.warn('⚠️ Нет данных для сохранения');
+            return;
+        }
+        
+        console.log('💾 Финализация звонка:', this.currentCallData);
+        
+        // Добавляем метаданные
+        const finalCallData = {
+            ...this.currentCallData,
+            completedAt: new Date().toISOString(),
+            savedAt: Date.now()
+        };
+        
+        // Добавляем в историю
+        this.callHistory.unshift(finalCallData);
+        if (this.callHistory.length > 10) {
+            this.callHistory = this.callHistory.slice(0, 10);
+        }
+        
+        // Сохраняем в chrome.storage
+        await this.saveData();
+        
+        // Очищаем текущие данные
+        this.currentCallData = null;
+        
+        console.log('✅ Звонок сохранен в историю');
+    }
+    
+    // Сохранение данных в chrome.storage
+    async saveData() {
+        try {
+            await chrome.storage.local.set({
+                callHistory: this.callHistory,
+                lastCallData: this.callHistory[0] || null,
+                lastAgentStatus: this.lastAgentStatus,
+                lastUpdate: Date.now()
+            });
+            console.log('💾 Данные сохранены в storage');
+        } catch (error) {
+            console.error('❌ Ошибка сохранения:', error);
+        }
+    }
+    
+    // Загрузка сохраненных данных
+    async loadStoredData() {
+        try {
+            const data = await chrome.storage.local.get([
+                'callHistory', 
+                'lastAgentStatus'
+            ]);
+            
+            if (data.callHistory) {
+                this.callHistory = data.callHistory;
+                console.log(`📚 Загружена история: ${this.callHistory.length} звонков`);
+            }
+            
+            if (data.lastAgentStatus) {
+                this.lastAgentStatus = data.lastAgentStatus;
+            }
+        } catch (error) {
+            console.error('❌ Ошибка загрузки данных:', error);
+        }
     }
 }
 
-// Основной обработчик сообщений
+// Создаем экземпляр монитора
+const monitor = new FinesseActiveMonitor();
+
+// Обработчик alarm событий
+chrome.alarms.onAlarm.addListener(async (alarm) => {
+    if (alarm.name === 'finesseStatusCheck') {
+        await monitor.checkAgentStatus();
+    } else if (alarm.name === 'activeCallMonitor') {
+        await monitor.captureCallData();
+    }
+});
+
+// Обработчик сообщений от content scripts
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    // Обработка тестовых запросов
-    if (request.action === 'test') {
-        console.log('🧪 Получен тестовый запрос от:', sender.tab?.url || 'unknown');
-        sendResponse({ status: 'success', message: 'Background service работает' });
-        return;
+    console.log('📨 Получен запрос:', request.action);
+    
+    if (request.action === 'getCallData') {
+        // Возвращаем данные из нашего монитора
+        sendResponse({
+            status: 'success',
+            data: monitor.callHistory
+        });
+        return true;
     }
     
-    // Проверяем, что это запрос на получение данных о звонке
-    if (request.action === 'getCallData') {
-        console.log('📨 Background: Получен запрос на данные от filler.js');
-        
-        // Используем async/await для более чистого кода
-        (async () => {
-            try {
-                // 1. Находим вкладку-источник (парсер)
-                const tabs = await chrome.tabs.query({
-                    url: "https://ssial000ap008.si.rt.ru:8445/desktop/container/*"
-                });
-                
-                console.log(`🔍 Найдено вкладок Finesse: ${tabs.length}`);
-                
-                if (tabs.length === 0) {
-                    console.error('❌ Background: Вкладка с Finesse не найдена');
-                    sendResponse({ 
-                        status: 'error', 
-                        message: 'Вкладка Cisco Finesse не найдена. Убедитесь, что она открыта.' 
-                    });
-                    return;
-                }
-                
-                const parserTab = tabs[0];
-                console.log(`✅ Background: Найдена вкладка-парсер:`, {
-                    id: parserTab.id,
-                    url: parserTab.url,
-                    status: parserTab.status
-                });
-                
-                // 2. Проверяем, загружен ли content script
-                const isLoaded = await isContentScriptLoaded(parserTab.id);
-                
-                if (!isLoaded) {
-                    console.log('⚠️ Content script не загружен, пытаемся инъектировать...');
-                    
-                    // Пробуем инъектировать скрипт
-                    const injected = await injectContentScripts(parserTab.id);
-                    
-                    if (!injected) {
-                        sendResponse({ 
-                            status: 'error', 
-                            message: 'Не удалось загрузить скрипт на странице Finesse. Перезагрузите страницу Finesse и попробуйте снова.' 
-                        });
-                        return;
-                    }
-                    
-                    // Даем скрипту время на инициализацию
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                }
-                // Стало:
-                // 3. Отправляем команду на получение ИСТОРИИ в parser.js
-                console.log('📤 Отправляем запрос на получение ИСТОРИИ в parser.js...');
-
-                // Запрашиваем именно историю звонков
-                chrome.tabs.sendMessage(parserTab.id, { action: 'getCallHistory' }, (parserResponse) => {
-                    if (chrome.runtime.lastError) {
-                        // ... (вся ваша обработка ошибок остается без изменений)
-                        console.error('❌ Background: Ошибка при отправке сообщения в parser.js:', chrome.runtime.lastError.message);
-                        // ...
-                        sendResponse({ status: 'error', message: 'Не удалось получить данные со страницы Finesse.' });
-                        return;
-                    }
-                    
-                    console.log('✅ Background: Получен ответ с историей от parser.js:', parserResponse);
-                    
-                    // ВАЖНО: Адаптируем ответ для filler.js
-                    // filler.js ожидает массив звонков в поле 'data'.
-                    // А parser.js присылает его в поле 'history'.
-                    // Поэтому мы "перекладываем" данные из одного поля в другое.
-                    
-                    if (parserResponse && parserResponse.status === 'success') {
-                        const responseForFiller = {
-                            status: 'success',
-                            data: parserResponse.history // <--- КЛЮЧЕВОЕ ИЗМЕНЕНИЕ
-                        };
-                        
-                        console.log('↪️ Пересылаем адаптированный ответ в filler.js:', responseForFiller);
-                        sendResponse(responseForFiller);
-                        
-                    } else {
-                        // Если от парсера пришла ошибка, просто пересылаем ее дальше
-                        sendResponse(parserResponse);
-                    }
-                });
-
-            } catch (error) {
-                console.error('❌ Неожиданная ошибка в background.js:', error);
-                sendResponse({ 
-                    status: 'error', 
-                    message: 'Произошла неожиданная ошибка: ' + error.message 
-                });
-            }
-        })();
-        
-        // Возвращаем true для асинхронного ответа
+    if (request.action === 'test') {
+        sendResponse({ 
+            status: 'success', 
+            message: 'Background service работает',
+            monitorActive: monitor.monitoringActive,
+            historyCount: monitor.callHistory.length
+        });
         return true;
     }
 });
 
-// Добавляем обработчик для диагностики подключений
-chrome.runtime.onConnect.addListener((port) => {
-    console.log('🔌 Новое подключение:', {
-        name: port.name,
-        sender: port.sender?.tab?.url || 'unknown'
-    });
-});
-
-// Функция для диагностики (можно вызвать из консоли service worker)
-globalThis.diagnoseTabs = async function() {
-    console.group('🔍 Диагностика вкладок');
-    
-    const allTabs = await chrome.tabs.query({});
-    const finesseTabs = allTabs.filter(tab => tab.url?.includes('ssial000ap008.si.rt.ru'));
-    const oprosnikTabs = allTabs.filter(tab => tab.url?.includes('ctp.rt.ru/quiz'));
-    
-    console.log('Всего вкладок:', allTabs.length);
-    console.log('Вкладки Finesse:', finesseTabs.map(t => ({
-        id: t.id,
-        url: t.url,
-        status: t.status
-    })));
-    console.log('Вкладки опросника:', oprosnikTabs.map(t => ({
-        id: t.id,
-        url: t.url,
-        status: t.status
-    })));
-    
-    // Проверяем загрузку content scripts
-    for (const tab of finesseTabs) {
-        const loaded = await isContentScriptLoaded(tab.id);
-        console.log(`Finesse tab ${tab.id}: content script ${loaded ? '✅ загружен' : '❌ не загружен'}`);
-    }
-    
+// Диагностические функции
+globalThis.monitorStatus = async function() {
+    console.group('📊 Статус мониторинга');
+    console.log('Активен:', monitor.monitoringActive);
+    console.log('Tab ID:', monitor.finesseTabId);
+    console.log('Последний статус:', monitor.lastAgentStatus);
+    console.log('В звонке:', monitor.isInCall);
+    console.log('Текущие данные:', monitor.currentCallData);
+    console.log('История:', monitor.callHistory.length, 'звонков');
     console.groupEnd();
 };
 
-console.log('✅ Background service worker полностью загружен');
-console.log('💡 Для диагностики используйте: diagnoseTabs()');
+globalThis.forceCheck = async function() {
+    console.log('🔄 Принудительная проверка...');
+    await monitor.checkAgentStatus();
+};
+
+console.log('✅ Background Service Worker готов к работе');
+console.log('💡 Команды: monitorStatus(), forceCheck()');

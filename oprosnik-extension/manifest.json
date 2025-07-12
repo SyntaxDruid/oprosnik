@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Oprosnik Helper",
-  "version": "3.2",
+  "version": "4.0.0",
   "description": "Помогает с заполнением опросника, копирует данные из файнес.",
   "permissions": [
     "alarms",
@@ -33,13 +33,16 @@
         "scripts/form-modifier.js",
         "scripts/filler.js"
       ],
+      
       "css": [
         "css/sidebar-hider.css",
-        "css/form-modifier.css"]
+        "css/form-modifier.css"],
+      "run_at": "document_idle"
     },
     {
       "matches": ["https://ssial000ap008.si.rt.ru:8445/desktop/container/?locale=ru_RU*"],
-      "js": ["scripts/parser.js"]
+      "js": ["scripts/parser.js"],
+      "run_at": "document_idle"
     }
   ],
   "icons": {
