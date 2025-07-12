@@ -5,6 +5,52 @@
 
 console.log('🚀 Background Service Worker с активным мониторингом запущен');
 
+// Функции для выполнения на странице (должны быть вне класса)
+function extractAgentStatus() {
+    const statusEl = document.querySelector('#voice-state-select-headerOptionText');
+    return {
+        status: statusEl ? statusEl.textContent.trim() : null,
+        timestamp: Date.now()
+    };
+}
+
+function extractCallData() {
+    const data = {
+        phone: null,
+        duration: null,
+        region: null,
+        timestamp: Date.now()
+    };
+    
+    // Ищем контейнеры звонка
+    const containers = document.querySelectorAll('[class*="callcontrol-grid-cell"]');
+    
+    for (const container of containers) {
+        // Ищем номер телефона
+        const phoneEl = container.querySelector('[aria-label*="Участник"]');
+        if (phoneEl) {
+            data.phone = phoneEl.textContent.trim();
+        }
+        
+        // Ищем таймер
+        const timerEl = container.querySelector('[role="timer"]');
+        if (timerEl) {
+            data.duration = timerEl.textContent.trim();
+        }
+        
+        // Ищем регион
+        const regionEl = container.querySelector('[class*="callVariableValue"] span');
+        if (regionEl) {
+            data.region = regionEl.textContent.trim();
+        }
+        
+        // Если нашли хотя бы что-то, прерываем поиск
+        if (data.phone || data.duration) break;
+    }
+    
+    return data;
+}
+
 // Основной класс для мониторинга Finesse
 class FinesseActiveMonitor {
     constructor() {
@@ -86,7 +132,7 @@ class FinesseActiveMonitor {
         try {
             const results = await chrome.scripting.executeScript({
                 target: { tabId: this.finesseTabId },
-                func: FinesseActiveMonitor.extractAgentStatus,
+                func: extractAgentStatus,
                 world: 'MAIN'
             });
             
@@ -99,14 +145,6 @@ class FinesseActiveMonitor {
         }
     }
     
-    // Функция для выполнения на странице - извлечение статуса
-    static extractAgentStatus() {
-        const statusEl = document.querySelector('#voice-state-select-headerOptionText');
-        return {
-            status: statusEl ? statusEl.textContent.trim() : null,
-            timestamp: Date.now()
-        };
-    }
     
     // Обработка данных статуса
     async processStatusData(data) {
@@ -156,7 +194,7 @@ class FinesseActiveMonitor {
         try {
             const results = await chrome.scripting.executeScript({
                 target: { tabId: this.finesseTabId },
-                func: FinesseActiveMonitor.extractCallData,
+                func: extractCallData,
                 world: 'MAIN'
             });
             
@@ -172,43 +210,6 @@ class FinesseActiveMonitor {
         }
     }
     
-    // Функция для выполнения на странице - извлечение данных звонка
-    static extractCallData() {
-        const data = {
-            phone: null,
-            duration: null,
-            region: null,
-            timestamp: Date.now()
-        };
-        
-        // Ищем контейнеры звонка
-        const containers = document.querySelectorAll('[class*="callcontrol-grid-cell"]');
-        
-        for (const container of containers) {
-            // Ищем номер телефона
-            const phoneEl = container.querySelector('[aria-label*="Участник"]');
-            if (phoneEl) {
-                data.phone = phoneEl.textContent.trim();
-            }
-            
-            // Ищем таймер
-            const timerEl = container.querySelector('[role="timer"]');
-            if (timerEl) {
-                data.duration = timerEl.textContent.trim();
-            }
-            
-            // Ищем регион
-            const regionEl = container.querySelector('[class*="callVariableValue"] span');
-            if (regionEl) {
-                data.region = regionEl.textContent.trim();
-            }
-            
-            // Если нашли хотя бы что-то, прерываем поиск
-            if (data.phone || data.duration) break;
-        }
-        
-        return data;
-    }
     
     // Пост-звонковый захват (усиленный мониторинг после завершения)
     async startPostCallCapture() {
