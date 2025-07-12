@@ -219,29 +219,50 @@ class FinesseActiveMonitor {
     }
     
     
-    // Пост-звонковый захват (усиленный мониторинг после завершения)
+    // Пост-звонковый захват (быстрая фиксация финальных данных)
     async startPostCallCapture() {
         console.log('🔄 Запуск пост-звонкового захвата');
         
         this.isInCall = false;
-        let captureAttempts = 0;
-        const maxAttempts = 10;
         
         // Останавливаем активный мониторинг
         chrome.alarms.clear('activeCallMonitor');
         
-        // Делаем несколько попыток захвата с интервалом
-        const captureInterval = setInterval(async () => {
+        // Делаем быстрые попытки захвата финальных данных
+        let captureAttempts = 0;
+        const maxAttempts = 3; // Сократили до 3 попыток
+        
+        const attemptCapture = async () => {
             captureAttempts++;
-            console.log(`📸 Попытка захвата ${captureAttempts}/${maxAttempts}`);
+            console.log(`📸 Финальная попытка захвата ${captureAttempts}/${maxAttempts}`);
             
+            const previousData = this.currentCallData ? {...this.currentCallData} : null;
             await this.captureCallData();
             
-            if (captureAttempts >= maxAttempts) {
-                clearInterval(captureInterval);
+            // Проверяем, изменились ли данные (особенно длительность)
+            const dataChanged = !previousData || 
+                                previousData.duration !== this.currentCallData?.duration ||
+                                previousData.phone !== this.currentCallData?.phone;
+            
+            if (dataChanged) {
+                console.log('✅ Данные обновились, фиксируем');
                 await this.finalizeCall();
+                return;
             }
-        }, 500); // каждые 500мс
+            
+            // Если данные не изменились и это последняя попытка - фиксируем что есть
+            if (captureAttempts >= maxAttempts) {
+                console.log('⏰ Финальная попытка, фиксируем имеющиеся данные');
+                await this.finalizeCall();
+                return;
+            }
+            
+            // Делаем следующую попытку через короткий интервал
+            setTimeout(attemptCapture, 200); // Уменьшили интервал до 200мс
+        };
+        
+        // Начинаем с небольшой задержки, чтобы данные успели обновиться
+        setTimeout(attemptCapture, 100);
     }
     
     // Финализация и сохранение звонка
