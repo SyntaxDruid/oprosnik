@@ -494,14 +494,12 @@ function pasteDataIntoComment(callData) {
  */
 function insertDataIntoField(field, callData) {
     // Форматируем данные в красивую строку для вставки
-    const formattedData = `--------------------------------
+    const formattedData = `
 Данные о звонке:
 - Номер телефона: ${callData.phone}
 - Длительность: ${callData.duration}
 - Регион: ${callData.region}
-- Время фиксации: ${callData.capturedAt}
-${callData.capturedDate ? `- Дата: ${new Date(callData.capturedDate).toLocaleDateString()}` : ''}
---------------------------------`;
+`;
 
     // Сохраняем текущее значение
     const currentValue = field.value;
