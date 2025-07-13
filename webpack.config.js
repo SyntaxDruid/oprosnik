@@ -40,6 +40,7 @@ module.exports = {
     new CopyPlugin({
       patterns: [
         { from: 'oprosnik-extension/manifest.json', to: 'manifest.json' },
+        { from: 'oprosnik-extension/popup.html', to: 'popup.html' },
         { from: 'oprosnik-extension/icons', to: 'icons' },
         { from: 'oprosnik-extension/css', to: 'css' }
       ]
