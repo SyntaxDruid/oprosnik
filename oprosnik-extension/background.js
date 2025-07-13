@@ -59,7 +59,7 @@ function extractCallData() {
     
     // Специфические селекторы на основе HTML структуры
     const specificSelectors = [
-        '[role="timer"]',                                    // Основной селектор
+        '[role="timer"]',                                   // Основной селектор
         '[class*="timer-timer"]',                           // По классу
         '[id*="call-timer"]',                               // По ID
         '[aria-label*="Общее время"]',                      // По aria-label
