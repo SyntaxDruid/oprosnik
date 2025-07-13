@@ -1,63 +1,114 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, Phone, Clock, MapPin, Download, RefreshCw, Activity, AlertCircle } from 'lucide-react';
+import { createRoot } from 'react-dom/client';
 
-const OprosnikHelperPopup = () => {
-  const [status, setStatus] = useState({
+// Типы для данных расширения
+interface CallData {
+  phone: string;
+  duration: string;
+  region: string;
+  timestamp: number;
+  source?: 'interface' | 'calculated';
+  completedAt: string;
+}
+
+interface ExtensionStatus {
+  monitoring: boolean;
+  finesse: boolean;
+  agentStatus: string | null;
+  lastUpdate: number | null;
+}
+
+interface Stats {
+  todayCount: number;
+  totalCount: number;
+  avgDuration: number;
+}
+
+// Иконки как простые SVG
+const Phone = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+  </svg>
+);
+
+const Clock = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+);
+
+const MapPin = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+  </svg>
+);
+
+const Search = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+  </svg>
+);
+
+const Download = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+  </svg>
+);
+
+const RefreshCw = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+  </svg>
+);
+
+const Activity = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+  </svg>
+);
+
+const AlertCircle = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+  </svg>
+);
+
+const OprosnikHelperPopup: React.FC = () => {
+  const [status, setStatus] = useState<ExtensionStatus>({
     monitoring: false,
     finesse: false,
     agentStatus: null,
     lastUpdate: null
   });
   
-  const [callHistory, setCallHistory] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTab, setSelectedTab] = useState('current');
-  const [loading, setLoading] = useState(true);
+  const [callHistory, setCallHistory] = useState<CallData[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [selectedTab, setSelectedTab] = useState<'current' | 'history' | 'stats'>('current');
+  const [loading, setLoading] = useState<boolean>(true);
 
-  // Симуляция получения данных из chrome.storage
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
       try {
-        // В реальном приложении здесь будет chrome.storage.local.get()
-        const mockData = {
-          callHistory: [
-            {
-              phone: '+79001234567',
-              duration: '00:05:23',
-              region: 'Москва',
-              timestamp: Date.now() - 1000 * 60 * 5,
-              source: 'interface',
-              completedAt: new Date(Date.now() - 1000 * 60 * 5).toISOString()
-            },
-            {
-              phone: '+79007654321',
-              duration: '00:03:45',
-              region: 'Санкт-Петербург',
-              timestamp: Date.now() - 1000 * 60 * 30,
-              source: 'calculated',
-              completedAt: new Date(Date.now() - 1000 * 60 * 30).toISOString()
-            },
-            {
-              phone: '+79123456789',
-              duration: '00:12:10',
-              region: 'Новосибирск',
-              timestamp: Date.now() - 1000 * 60 * 120,
-              source: 'interface',
-              completedAt: new Date(Date.now() - 1000 * 60 * 120).toISOString()
-            }
-          ],
-          lastAgentStatus: 'Готов',
-          monitoring: true,
-          finesse: true
-        };
+        // Получаем данные из chrome.storage
+        const data = await chrome.storage.local.get([
+          'callHistory',
+          'lastAgentStatus',
+          'lastUpdate'
+        ]);
+        
+        // Проверяем наличие вкладки Finesse
+        const tabs = await chrome.tabs.query({
+          url: "https://ssial000ap008.si.rt.ru:8445/desktop/container/*"
+        });
 
-        setCallHistory(mockData.callHistory);
+        setCallHistory(data.callHistory || []);
         setStatus({
-          monitoring: mockData.monitoring,
-          finesse: mockData.finesse,
-          agentStatus: mockData.lastAgentStatus,
-          lastUpdate: Date.now()
+          monitoring: tabs.length > 0,
+          finesse: tabs.length > 0,
+          agentStatus: data.lastAgentStatus || null,
+          lastUpdate: data.lastUpdate || Date.now()
         });
       } catch (error) {
         console.error('Error loading data:', error);
@@ -83,7 +134,7 @@ const OprosnikHelperPopup = () => {
   }, [callHistory, searchQuery]);
 
   // Статистика
-  const stats = useMemo(() => {
+  const stats = useMemo((): Stats => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
@@ -103,14 +154,14 @@ const OprosnikHelperPopup = () => {
     };
   }, [callHistory]);
 
-  const formatDuration = (seconds) => {
+  const formatDuration = (seconds: number): string => {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
     const s = seconds % 60;
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  const formatRelativeTime = (timestamp) => {
+  const formatRelativeTime = (timestamp: number): string => {
     const now = Date.now();
     const diff = now - timestamp;
     const minutes = Math.floor(diff / 60000);
@@ -147,7 +198,7 @@ const OprosnikHelperPopup = () => {
     link.click();
   };
 
-  const StatusIndicator = ({ active, label }) => (
+  const StatusIndicator: React.FC<{ active: boolean; label: string }> = ({ active, label }) => (
     <div className="flex items-center gap-2">
       <div className={`w-2 h-2 rounded-full ${active ? 'bg-green-500' : 'bg-red-500'} animate-pulse`} />
       <span className={`text-sm ${active ? 'text-green-600' : 'text-red-600'}`}>{label}</span>
@@ -286,7 +337,7 @@ const OprosnikHelperPopup = () => {
             <StatCard
               icon={<Phone className="w-5 h-5 text-blue-500" />}
               label="Звонков сегодня"
-              value={stats.todayCount}
+              value={stats.todayCount.toString()}
             />
             <StatCard
               icon={<Clock className="w-5 h-5 text-green-500" />}
@@ -296,7 +347,7 @@ const OprosnikHelperPopup = () => {
             <StatCard
               icon={<Activity className="w-5 h-5 text-purple-500" />}
               label="Всего звонков"
-              value={stats.totalCount}
+              value={stats.totalCount.toString()}
             />
             
             <div className="mt-6 pt-4 border-t">
@@ -310,8 +361,23 @@ const OprosnikHelperPopup = () => {
   );
 };
 
-const CallCard = ({ call, isLast = false }) => {
+const CallCard: React.FC<{ call: CallData; isLast?: boolean }> = ({ call, isLast = false }) => {
   const sourceIcon = call.source === 'calculated' ? '⚡' : '📊';
+  
+  const formatRelativeTime = (timestamp: number): string => {
+    const now = Date.now();
+    const diff = now - timestamp;
+    const minutes = Math.floor(diff / 60000);
+    
+    if (minutes < 1) return 'Только что';
+    if (minutes < 60) return `${minutes} мин. назад`;
+    
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} ч. назад`;
+    
+    const days = Math.floor(hours / 24);
+    return `${days} дн. назад`;
+  };
   
   return (
     <div className={`border rounded-lg p-3 hover:bg-gray-50 transition-colors ${
@@ -346,7 +412,7 @@ const CallCard = ({ call, isLast = false }) => {
   );
 };
 
-const StatCard = ({ icon, label, value }) => (
+const StatCard: React.FC<{ icon: React.ReactNode; label: string; value: string }> = ({ icon, label, value }) => (
   <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
     {icon}
     <div className="flex-1">
@@ -356,11 +422,11 @@ const StatCard = ({ icon, label, value }) => (
   </div>
 );
 
-const RegionChart = ({ history }) => {
+const RegionChart: React.FC<{ history: CallData[] }> = ({ history }) => {
   const regionCounts = history.reduce((acc, call) => {
     acc[call.region] = (acc[call.region] || 0) + 1;
     return acc;
-  }, {});
+  }, {} as Record<string, number>);
   
   const maxCount = Math.max(...Object.values(regionCounts));
   
@@ -385,19 +451,11 @@ const RegionChart = ({ history }) => {
   );
 };
 
-const formatRelativeTime = (timestamp) => {
-  const now = Date.now();
-  const diff = now - timestamp;
-  const minutes = Math.floor(diff / 60000);
-  
-  if (minutes < 1) return 'Только что';
-  if (minutes < 60) return `${minutes} мин. назад`;
-  
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours} ч. назад`;
-  
-  const days = Math.floor(hours / 24);
-  return `${days} дн. назад`;
-};
+// Инициализация React приложения
+const container = document.getElementById('popup-root');
+if (container) {
+  const root = createRoot(container);
+  root.render(<OprosnikHelperPopup />);
+}
 
 export default OprosnikHelperPopup;

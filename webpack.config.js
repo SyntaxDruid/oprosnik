@@ -3,7 +3,7 @@ const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = {
   entry: {
-    popup: './oprosnik-extension/popup.jsx',
+    popup: './oprosnik-extension/popup.tsx',
     background: './oprosnik-extension/background.js',
     'scripts/filler': './oprosnik-extension/scripts/filler.js',
     'scripts/form-modifier': './oprosnik-extension/scripts/form-modifier.js',
@@ -40,7 +40,6 @@ module.exports = {
     new CopyPlugin({
       patterns: [
         { from: 'oprosnik-extension/manifest.json', to: 'manifest.json' },
-        { from: 'oprosnik-extension/popup.jsx', to: 'popup.jsx' },
         { from: 'oprosnik-extension/icons', to: 'icons' },
         { from: 'oprosnik-extension/css', to: 'css' }
       ]
