@@ -1,0 +1,49 @@
+const path = require('path');
+const CopyPlugin = require('copy-webpack-plugin');
+
+module.exports = {
+  entry: {
+    popup: './oprosnik-extension/popup.jsx',
+    background: './oprosnik-extension/background.js',
+    'scripts/filler': './oprosnik-extension/scripts/filler.js',
+    'scripts/form-modifier': './oprosnik-extension/scripts/form-modifier.js',
+    'scripts/parser': './oprosnik-extension/scripts/parser.js',
+    'scripts/sidebar-hider': './oprosnik-extension/scripts/sidebar-hider.js'
+  },
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    filename: '[name].js',
+    clean: true
+  },
+  module: {
+    rules: [
+      {
+        test: /\.(js|jsx|ts|tsx)$/,
+        exclude: /node_modules/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: [
+              '@babel/preset-env',
+              '@babel/preset-react',
+              '@babel/preset-typescript'
+            ]
+          }
+        }
+      }
+    ]
+  },
+  resolve: {
+    extensions: ['.js', '.jsx', '.ts', '.tsx']
+  },
+  plugins: [
+    new CopyPlugin({
+      patterns: [
+        { from: 'oprosnik-extension/manifest.json', to: 'manifest.json' },
+        { from: 'oprosnik-extension/popup.html', to: 'popup.html' },
+        { from: 'oprosnik-extension/icons', to: 'icons' },
+        { from: 'oprosnik-extension/css', to: 'css' }
+      ]
+    })
+  ]
+};
