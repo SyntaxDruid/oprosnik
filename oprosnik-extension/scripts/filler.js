@@ -1,51 +1,34 @@
 /**
- * filler.js - Версия с поддержкой истории звонков
- * Версия: 2.2
- * 
- * Работает на странице опросника.
- * Позволяет выбрать данные из последних звонков.
+ * filler.js - Версия: 2.3
+ * Работает на странице опросника
+ * Позволяет выбрать данные из последних звонков
  */
 
-console.log('🚀 Oprosnik Helper: Filler Script начинает загрузку...', {
-    timestamp: new Date().toISOString(),
-    url: window.location.href,
-    readyState: document.readyState,
-    version: '2.2'
-});
+// Константы
+const CONFIG = {
+    VERSION: '2.3',
+    RETRY_ATTEMPTS: 3,
+    RETRY_DELAY: 1000,
+    STORAGE_KEY: 'oprosnikCallHistory'
+};
 
 // Проверка доступности Chrome API
 const diagnostics = {
     chromeAvailable: typeof chrome !== 'undefined',
     runtimeAvailable: typeof chrome !== 'undefined' && chrome.runtime,
-    sendMessageAvailable: typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage,
-    browserAvailable: typeof browser !== 'undefined',
-    inIframe: window !== window.top,
-    protocol: window.location.protocol,
-    contentScriptContext: typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id
+    sendMessageAvailable: typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage
 };
 
-console.log('📊 Диагностика окружения:', diagnostics);
-
-// Глобальная переменная для хранения API
 let messageAPI = null;
 
-// Инициализация API для обмена сообщениями
 function initializeMessageAPI() {
     if (diagnostics.sendMessageAvailable) {
         messageAPI = chrome.runtime;
-        console.log('✅ Chrome API доступен и инициализирован');
         return true;
-    } else if (diagnostics.browserAvailable && browser.runtime && browser.runtime.sendMessage) {
-        messageAPI = browser.runtime;
-        console.log('✅ Browser API (Firefox) доступен и инициализирован');
-        return true;
-    } else {
-        console.error('❌ API расширения недоступен!');
-        return false;
     }
+    return false;
 }
 
-// Безопасная отправка сообщений
 function safeSendMessage(message, callback) {
     if (!messageAPI) {
         console.error('❌ Message API не инициализирован');
@@ -54,21 +37,17 @@ function safeSendMessage(message, callback) {
     }
 
     try {
-        console.log('📤 Отправка сообщения:', message);
         messageAPI.sendMessage(message, (response) => {
             if (messageAPI.lastError) {
-                console.error('❌ Ошибка при отправке:', messageAPI.lastError);
                 callback({ 
                     status: 'error', 
                     message: messageAPI.lastError.message || 'Неизвестная ошибка' 
                 });
             } else {
-                console.log('📥 Получен ответ:', response);
                 callback(response);
             }
         });
     } catch (error) {
-        console.error('❌ Исключение при отправке сообщения:', error);
         callback({ 
             status: 'error', 
             message: 'Ошибка выполнения: ' + error.message 
@@ -76,9 +55,6 @@ function safeSendMessage(message, callback) {
     }
 }
 
-/**
- * Создает модальное окно для выбора звонка из истории
- */
 function showCallHistoryModal(callHistory) {
     console.log('📚 Показываем историю звонков:', callHistory.length);
     

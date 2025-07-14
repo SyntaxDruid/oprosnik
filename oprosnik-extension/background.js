@@ -28,113 +28,52 @@ function extractCallData() {
         data.phone = phoneEl.textContent.trim();
     }
     
-    // Подробная диагностика всех элементов с таймерами
-    console.log('🔍 Диагностика элементов таймера:');
-    
-    // Все элементы с role="timer"
-    const timerRoleElements = document.querySelectorAll('[role="timer"]');
-    console.log('Элементы с role="timer":', timerRoleElements.length);
-    timerRoleElements.forEach((el, i) => {
-        console.log(`Timer ${i}:`, {
-            id: el.id,
-            textContent: el.textContent,
-            ariaLabel: el.getAttribute('aria-label'),
-            classes: el.className
-        });
-    });
-    
-    // Все элементы с классами timer
-    const timerClassElements = document.querySelectorAll('[class*="timer"]');
-    console.log('Элементы с классом timer:', timerClassElements.length);
-    timerClassElements.forEach((el, i) => {
-        const text = el.textContent.trim();
-        if (/\d{2}:\d{2}:\d{2}/.test(text)) {
-            console.log(`Timer class ${i} (валидное время):`, {
-                id: el.id,
-                textContent: text,
-                classes: el.className
-            });
-        }
-    });
-    
-    // Специфические селекторы на основе HTML структуры
-    const specificSelectors = [
-        '[role="timer"]',                                   // Основной селектор
-        '[class*="timer-timer"]',                           // По классу
-        '[id*="call-timer"]',                               // По ID
-        '[aria-label*="Общее время"]',                      // По aria-label
-        '.callcontrol-timer-7KaNm [role="timer"]',          // Более специфичный
-        '[id$="call-timer"]',                               // ID заканчивается на call-timer
-        '.timer-timer-2ZG4P',                               // Точный класс из HTML
-        '[class*="callcontrol-timer"] [role="timer"]'       // Комбинированный селектор
+    // Селекторы для поиска времени звонка
+    const timerSelectors = [
+        '[role="timer"]',
+        '[class*="timer-timer"]',
+        '[id*="call-timer"]',
+        '[aria-label*="Общее время"]',
+        '.callcontrol-timer-7KaNm [role="timer"]',
+        '[id$="call-timer"]',
+        '.timer-timer-2ZG4P',
+        '[class*="callcontrol-timer"] [role="timer"]'
     ];
     
-    for (const selector of specificSelectors) {
+    // Поиск времени по селекторам
+    for (const selector of timerSelectors) {
         try {
             const timerEl = document.querySelector(selector);
             if (timerEl && timerEl.textContent.trim()) {
                 const timerText = timerEl.textContent.trim();
-                console.log(`Проверяем селектор ${selector}: "${timerText}"`);
-                
-                // Проверяем, что это похоже на время (формат ЧЧ:ММ:СС)
                 if (/\d{2}:\d{2}:\d{2}/.test(timerText)) {
                     data.duration = timerText;
-                    console.log(`✅ Время найдено через селектор ${selector}: ${timerText}`);
                     break;
                 }
             }
         } catch (e) {
-            console.log(`❌ Ошибка с селектором ${selector}:`, e.message);
+            // Игнорируем ошибки селекторов
         }
     }
     
-    // Поиск всех элементов содержащих время
+    // Fallback: поиск времени во всех элементах
     if (!data.duration) {
-        console.log('🔍 Поиск времени во всех элементах...');
         const allElements = document.querySelectorAll('*');
-        let found = false;
-        
         for (const el of allElements) {
             const text = el.textContent?.trim() || '';
             if (/^\d{2}:\d{2}:\d{2}$/.test(text)) {
-                console.log('📍 Найден элемент с временем:', {
-                    text: text,
-                    id: el.id,
-                    className: el.className,
-                    tagName: el.tagName,
-                    ariaLabel: el.getAttribute('aria-label'),
-                    role: el.getAttribute('role')
-                });
-                
-                if (!found) {
-                    data.duration = text;
-                    found = true;
-                }
+                data.duration = text;
+                break;
             }
         }
     }
     
-    // Ищем регион в call variable value
-    const regionEl = document.querySelector('[class*="callVariableValue"] span');
+    // Поиск региона
+    const regionEl = document.querySelector('[class*="callVariableValue"] span') ||
+                     document.querySelector('[id*="call-header-variable-value"]');
     if (regionEl) {
         data.region = regionEl.textContent.trim();
     }
-    
-    // Альтернативный поиск региона по id
-    if (!data.region) {
-        const regionAltEl = document.querySelector('[id*="call-header-variable-value"]');
-        if (regionAltEl) {
-            data.region = regionAltEl.textContent.trim();
-        }
-    }
-    
-    // Финальное логирование
-    console.log('📊 Финальные извлеченные данные:', {
-        phone: data.phone,
-        duration: data.duration,
-        region: data.region,
-        success: !!(data.phone && data.duration && data.region)
-    });
     
     return data;
 }
@@ -202,7 +141,6 @@ class FinesseActiveMonitor {
             return true;
         }
         
-        console.log('❌ Вкладка Finesse не найдена');
         this.monitoringActive = false;
         return false;
     }
@@ -210,8 +148,6 @@ class FinesseActiveMonitor {
     // Обработка обновления вкладок
     handleTabUpdate(tabId, changeInfo, tab) {
         if (tabId === this.finesseTabId && changeInfo.status === 'complete') {
-            console.log('🔄 Вкладка Finesse перезагружена');
-            // Даем время на загрузку страницы
             setTimeout(() => this.checkAgentStatus(), 3000);
         }
     }
@@ -219,7 +155,6 @@ class FinesseActiveMonitor {
     // Обработка закрытия вкладок
     handleTabRemoved(tabId) {
         if (tabId === this.finesseTabId) {
-            console.log('❌ Вкладка Finesse закрыта');
             this.finesseTabId = null;
             this.monitoringActive = false;
         }
@@ -243,7 +178,6 @@ class FinesseActiveMonitor {
                 await this.processStatusData(results[0].result);
             }
         } catch (error) {
-            console.error('❌ Ошибка при проверке статуса:', error);
             this.monitoringActive = false;
         }
     }
@@ -258,16 +192,12 @@ class FinesseActiveMonitor {
         
         // Проверяем изменение статуса
         if (currentStatus !== previousStatus) {
-            console.log(`📞 Статус изменился: ${previousStatus} → ${currentStatus}`);
-            
             // Начало разговора
             if (currentStatus === 'Разговор' && !this.isInCall) {
-                console.log('🔔 Начат новый звонок!');
                 this.isInCall = true;
                 this.callStartTime = Date.now();
                 this.callEndTime = null;
                 this.calculatedDuration = null;
-                console.log('⏰ Время начала звонка зафиксировано:', new Date(this.callStartTime).toLocaleTimeString());
                 this.startActiveCallMonitoring();
             }
             
@@ -276,8 +206,6 @@ class FinesseActiveMonitor {
                 this.callEndTime = Date.now();
                 const callDurationMs = this.callEndTime - this.callStartTime;
                 this.calculatedDuration = this.formatDuration(callDurationMs);
-                console.log('☎️ Звонок завершается...');
-                console.log('⏰ Время окончания звонка:', new Date(this.callEndTime).toLocaleTimeString());
                 console.log('📊 Вычисленная длительность:', this.calculatedDuration);
                 this.startPostCallCapture();
             }
@@ -295,14 +223,9 @@ class FinesseActiveMonitor {
     
     // Начинаем активный мониторинг звонка
     startActiveCallMonitoring() {
-        console.log('🎯 Запуск активного мониторинга звонка');
-        
-        // Создаем более частый alarm
         chrome.alarms.create('activeCallMonitor', {
             periodInMinutes: 0.0167 // каждую секунду
         });
-        
-        // Сразу делаем первый захват
         this.captureCallData();
     }
     
@@ -321,52 +244,40 @@ class FinesseActiveMonitor {
                 const callData = results[0].result;
                 if (callData.phone || callData.duration) {
                     this.currentCallData = callData;
-                    console.log('📊 Данные звонка обновлены:', callData);
                 }
             }
         } catch (error) {
-            console.error('❌ Ошибка захвата данных звонка:', error);
+            // Игнорируем ошибки захвата
         }
     }
     
     
-    // Быстрый захват в статусе "Завершение" - только первые 0-3 секунды
+    // Быстрый захват в статусе "Завершение"
     async startPostCallCapture() {
-        console.log('🔄 Запуск быстрого захвата в статусе "Завершение"');
-        
         this.isInCall = false;
-        
-        // Останавливаем активный мониторинг
         chrome.alarms.clear('activeCallMonitor');
         
-        // Быстрые попытки захвата только в первые 3 секунды статуса "Завершение"
         let captureAttempts = 0;
-        const maxAttempts = 3; // Только 3 быстрых попытки
-        const captureWindow = 3000; // Окно захвата 3 секунды
+        const maxAttempts = 3;
+        const captureWindow = 3000;
         const startTime = Date.now();
         
         const attemptCapture = async () => {
             const elapsed = Date.now() - startTime;
             
-            // Проверяем, не вышли ли за окно захвата
             if (elapsed > captureWindow) {
-                console.log('⏰ Окно захвата (3 сек) истекло, используем вычисленную длительность');
                 await this.finalizeCallWithCalculatedDuration();
                 return;
             }
             
             captureAttempts++;
-            console.log(`📸 Быстрый захват ${captureAttempts}/${maxAttempts} (${elapsed}мс от начала "Завершение")`);
-            
             await this.captureCallData();
             
-            // Проверяем, получили ли финальное время из интерфейса
             const hasValidDuration = this.currentCallData?.duration && 
                                    this.currentCallData.duration !== '00:00:00' &&
                                    /\d{2}:\d{2}:\d{2}/.test(this.currentCallData.duration);
             
             if (hasValidDuration) {
-                console.log('✅ Получено финальное время из интерфейса:', this.currentCallData.duration);
                 await this.finalizeCall();
                 return;
             }

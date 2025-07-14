@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Oprosnik Helper",
-  "version": "4.3.2",
+  "version": "4.4.0",
   "description": "Помогает с заполнением опросника, копирует данные из файнес.",
   "permissions": [
     "alarms",

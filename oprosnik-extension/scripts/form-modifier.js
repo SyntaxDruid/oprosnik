@@ -179,6 +179,18 @@ function hideCallDurationElement() {
  * УНИВЕРСАЛЬНАЯ ФУНКЦИЯ
  * Находит и удаляет несколько элементов <option> из разных выпадающих списков.
  */
+// Константы конфигурации
+const CONFIG = {
+  OPTIONS_TO_REMOVE: {
+    'type_group': ['КДГ 1 ЛТП'],
+    'type_id': [403, 334, 404, 405, 355, 373, 391, 388, 9, 375, 402, 337, 20, 21, 22, 24, 27, 29, 338, 339, 340, 341, 371, 46, 342, 345, 52, 53, 346, 
+                33, 34, 35, 392, 37, 56, 349, 353, 44, 41, 381, 401, 356, 43, 378, 379, 382, 384, 394, 362, 369, 364, 365, 390, 370, 367, 399, 398, 67]
+  },
+  INTERVALS: {
+    OPTIONS_CLEANUP: 300
+  }
+};
+
 function removeSpecificOptions(selectors) {
   for (const selectId in selectors) {
     if (Object.prototype.hasOwnProperty.call(selectors, selectId)) {
@@ -278,12 +290,6 @@ function updateCommentHint(hint) {
 
 // --- ЗАПУСК ЛОГИКИ ---
 
-// Определяем, какие опции и из каких селекторов нужно удалить
-const optionsToRemove = {
-  'type_group': ['КДГ 1 ЛТП'], // Для статичного списка
-  'type_id': [403, 334, 404, 405, 355, 373, 391, 388, 9, 375, 402, 337, 20, 21, 22, 24, 27, 29, 338, 339, 340, 341, 371, 46, 342, 345, 52, 53, 346, 
-              33, 34, 35, 392, 37, 56, 349, 353, 44, 41, 381, 401, 356, 43, 378, 379, 382, 384, 394, 362, 369, 364, 365, 390, 370, 367, 399, 398, 67]
-};
 
 // Ждем загрузки DOM
 if (document.readyState === 'loading') {
@@ -299,16 +305,11 @@ function initializeAll() {
   // 2. Скрываем ненужный элемент формы
   hideCallDurationElement();
   
-  // 3. Сразу удаляем опции из статичных списков
-  removeSpecificOptions({ 'type_group': optionsToRemove.type_group });
+  removeSpecificOptions({ 'type_group': CONFIG.OPTIONS_TO_REMOVE.type_group });
+  setTimeout(addTypeIdHint, 500);
   
-  // 4. Добавляем функционал подсказок
-  setTimeout(addTypeIdHint, 500); // Небольшая задержка для гарантии загрузки списка
-  
-  // 5. Для динамически изменяемых списков, запускаем периодическую проверку
   setInterval(() => {
-    removeSpecificOptions({ 'type_id': optionsToRemove.type_id });
-  }, 300);
-  
-  console.log('Oprosnik Helper: Все модификации применены успешно.');
+    removeSpecificOptions({ 'type_id': CONFIG.OPTIONS_TO_REMOVE.type_id });
+  }, CONFIG.INTERVALS.OPTIONS_CLEANUP);
+
 }
