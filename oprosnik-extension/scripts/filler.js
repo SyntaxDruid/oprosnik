@@ -493,18 +493,8 @@ function pasteDataIntoComment(callData) {
  * Вставляет данные в указанное поле
  */
 function insertDataIntoField(field, callData) {
-    // Формируем строку с длительностью, показывая обе версии если они есть
+    // Используем только расчётное время (до починки времени из интерфейса)
     let durationText = callData.duration || 'Неизвестно';
-    
-    // Если есть и интерфейсная, и расчётная длительность - показываем обе
-    if (callData.interfaceDuration && callData.calculatedDuration && 
-        callData.interfaceDuration !== callData.calculatedDuration) {
-        durationText = `${callData.duration} (интерфейс: ${callData.interfaceDuration} / расчёт: ${callData.calculatedDuration})`;
-    } else if (callData.calculatedDuration && callData.source === 'calculated') {
-        durationText = `${callData.duration} (расчётное время)`;
-    } else if (callData.calculatedDuration && callData.source === 'interface') {
-        durationText = `${callData.duration} (из интерфейса)`;
-    }
 
     // Форматируем данные в красивую строку для вставки
     const formattedData = `
