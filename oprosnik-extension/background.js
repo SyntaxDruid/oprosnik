@@ -440,16 +440,40 @@ class FinesseActiveMonitor {
         
         console.log('💾 Финализация звонка с данными из интерфейса:', this.currentCallData);
         
+        // Проверяем качество времени из интерфейса
+        const interfaceDuration = this.currentCallData.duration;
+        const calculatedDuration = this.calculatedDuration;
+        
+        // Если время из интерфейса слишком короткое (меньше 10 секунд) или равно 00:00:00,
+        // используем расчётное время
+        let finalDuration = interfaceDuration;
+        let durationSource = 'interface';
+        
+        if (interfaceDuration === '00:00:00' || this.isDurationTooShort(interfaceDuration)) {
+            console.log('⚠️ Время из интерфейса слишком короткое или нулевое, используем расчётное');
+            finalDuration = calculatedDuration || '00:00:00';
+            durationSource = 'calculated';
+        }
+        
         // Добавляем метаданные
         const finalCallData = {
             ...this.currentCallData,
+            duration: finalDuration, // Используем лучшее доступное время
             completedAt: new Date().toISOString(),
             savedAt: Date.now(),
-            source: 'interface', // Помечаем, что данные из интерфейса
+            source: durationSource, // Помечаем источник времени
             callStartTime: this.callStartTime,
             callEndTime: this.callEndTime,
-            calculatedDuration: this.calculatedDuration // Сохраняем и вычисленную для сравнения
+            calculatedDuration: this.calculatedDuration, // Сохраняем и вычисленную для сравнения
+            interfaceDuration: interfaceDuration // Сохраняем исходное время из интерфейса
         };
+        
+        console.log('🕐 Выбрано время:', {
+            interface: interfaceDuration,
+            calculated: calculatedDuration,
+            final: finalDuration,
+            source: durationSource
+        });
         
         // Добавляем в историю
         this.callHistory.unshift(finalCallData);
@@ -466,7 +490,22 @@ class FinesseActiveMonitor {
         this.callEndTime = null;
         this.calculatedDuration = null;
         
-        console.log('✅ Звонок сохранен с данными из интерфейса');
+        console.log('✅ Звонок сохранен с оптимальным временем');
+    }
+    
+    // Проверяет, слишком ли короткое время (менее 10 секунд)
+    isDurationTooShort(duration) {
+        if (!duration || duration === '00:00:00') return true;
+        
+        const match = duration.match(/(\d{2}):(\d{2}):(\d{2})/);
+        if (!match) return true;
+        
+        const hours = parseInt(match[1]);
+        const minutes = parseInt(match[2]);
+        const seconds = parseInt(match[3]);
+        
+        const totalSeconds = hours * 3600 + minutes * 60 + seconds;
+        return totalSeconds < 10; // Менее 10 секунд считается слишком коротким
     }
     
     // Сохранение данных в chrome.storage
