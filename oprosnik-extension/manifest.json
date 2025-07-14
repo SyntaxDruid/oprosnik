@@ -29,13 +29,12 @@
     {
       "matches": ["https://ctp.rt.ru/quiz*"],
       "js": [
-        "scripts/sidebar-hider.js",
+        "scripts/sidebar-delay.js",
         "scripts/form-modifier.js",
         "scripts/filler.js"
       ],
       
       "css": [
-        "css/sidebar-hider.css",
         "css/form-modifier.css"],
       "run_at": "document_idle"
     },

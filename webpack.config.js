@@ -8,7 +8,7 @@ module.exports = {
     'scripts/filler': './oprosnik-extension/scripts/filler.js',
     'scripts/form-modifier': './oprosnik-extension/scripts/form-modifier.js',
     'scripts/parser': './oprosnik-extension/scripts/parser.js',
-    'scripts/sidebar-hider': './oprosnik-extension/scripts/sidebar-hider.js'
+    'scripts/sidebar-hider': './oprosnik-extension/scripts/sidebar-delay.js'
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
