@@ -76,7 +76,7 @@ const TOOLTIP_STYLES = `
       position: relative;
       display: inline-block;
       margin-left: 10px;
-      vertical-align: middle;
+      vertical-align: top;
     }
     
     .oprosnik-hint-icon {
@@ -92,11 +92,15 @@ const TOOLTIP_STYLES = `
       font-size: 12px;
       font-weight: bold;
       transition: all 0.3s ease;
+      border: none;
+      outline: none;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     
     .oprosnik-hint-icon:hover {
       background-color: #0056b3;
       transform: scale(1.1);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }
     
     .oprosnik-hint-tooltip {
@@ -106,16 +110,16 @@ const TOOLTIP_STYLES = `
       transform: translateY(-50%);
       background-color: #333;
       color: white;
-      padding: 10px 15px;
-      border-radius: 6px;
+      padding: 12px 16px;
+      border-radius: 8px;
       font-size: 13px;
       line-height: 1.4;
-      width: 300px;
+      width: 320px;
       z-index: 1000;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.3s ease;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
     }
     
     .oprosnik-hint-tooltip::before {
@@ -130,21 +134,96 @@ const TOOLTIP_STYLES = `
     
     .oprosnik-hint-container:hover .oprosnik-hint-tooltip {
       opacity: 1;
+      transform: translateY(-50%) translateX(5px);
     }
     
     .oprosnik-comment-hint {
       background-color: #e3f2fd;
       border: 1px solid #1976d2;
-      border-radius: 4px;
-      padding: 10px;
-      margin-top: 5px;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-top: 8px;
       font-size: 13px;
       color: #0d47a1;
       display: none;
+      position: relative;
+      box-shadow: 0 2px 8px rgba(25,118,210,0.1);
+    }
+    
+    .oprosnik-comment-hint::before {
+      content: '';
+      position: absolute;
+      left: 16px;
+      top: -8px;
+      border: 8px solid transparent;
+      border-bottom-color: #1976d2;
     }
     
     .oprosnik-comment-hint strong {
       font-weight: 600;
+      color: #1976d2;
+    }
+    
+    .oprosnik-comment-hint-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      background-color: #1976d2;
+      color: white;
+      border-radius: 50%;
+      cursor: help;
+      font-size: 12px;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      border: none;
+      outline: none;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-right: 10px;
+      margin-top: 8px;
+      position: relative;
+    }
+    
+    .oprosnik-comment-hint-icon:hover {
+      background-color: #1565c0;
+      transform: scale(1.1);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    
+    .oprosnik-comment-hint-tooltip {
+      position: absolute;
+      left: 30px;
+      top: 50%;
+      transform: translateY(-50%);
+      background-color: #333;
+      color: white;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      line-height: 1.4;
+      width: 320px;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      white-space: nowrap;
+    }
+    
+    .oprosnik-comment-hint-tooltip::before {
+      content: '';
+      position: absolute;
+      left: -8px;
+      top: 50%;
+      transform: translateY(-50%);
+      border: 8px solid transparent;
+      border-right-color: #333;
+    }
+    
+    .oprosnik-comment-hint-icon:hover .oprosnik-comment-hint-tooltip {
+      opacity: 1;
+      transform: translateY(-50%) translateX(5px);
     }
   </style>
 `;
@@ -262,6 +341,21 @@ function addTypeIdHint() {
 }
 
 /**
+ * Создает элемент подсказки для комментариев
+ */
+function createCommentHintIcon(hint) {
+  const container = document.createElement('div');
+  container.className = 'oprosnik-hint-container';
+  container.innerHTML = `
+    <div class="oprosnik-comment-hint-icon">
+      ?
+      <div class="oprosnik-comment-hint-tooltip">${hint}</div>
+    </div>
+  `;
+  return container;
+}
+
+/**
  * Обновляет подсказку под полем комментария
  */
 function updateCommentHint(hint) {
@@ -280,9 +374,19 @@ function updateCommentHint(hint) {
     commentContainer.appendChild(hintElement);
   }
   
+  // Удаляем старую иконку подсказки
+  const oldIcon = commentContainer.querySelector('.oprosnik-comment-hint-icon');
+  if (oldIcon) {
+    oldIcon.parentElement.remove();
+  }
+  
   if (hint) {
     hintElement.innerHTML = `<strong>Подсказка:</strong> ${hint}`;
     hintElement.style.display = 'block';
+    
+    // Добавляем иконку подсказки
+    const hintIcon = createCommentHintIcon(hint);
+    hintElement.appendChild(hintIcon);
   } else {
     hintElement.style.display = 'none';
   }
