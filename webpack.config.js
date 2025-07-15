@@ -41,6 +41,7 @@ module.exports = {
       patterns: [
         { from: 'oprosnik-extension/manifest.json', to: 'manifest.json' },
         { from: 'oprosnik-extension/popup.html', to: 'popup.html' },
+        { from: 'oprosnik-extension/config.json', to: 'config.json' },
         { from: 'oprosnik-extension/icons', to: 'icons' },
         { from: 'oprosnik-extension/css', to: 'css' }
       ]
