@@ -301,7 +301,7 @@ function createPasteButton() {
         pasteButton.type = 'button';
         pasteButton.className = 'btn btn-success oprosnik-helper-btn';
         pasteButton.style.height = '38px';
-        pasteButton.style.fontSize = '16px';
+        pasteButton.style.fontSize = '16px !important';
         
         // Добавляем data-атрибуты для диагностики
         pasteButton.setAttribute('data-extension-id', chrome.runtime?.id || 'unknown');
