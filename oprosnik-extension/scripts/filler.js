@@ -1,12 +1,13 @@
 /**
- * filler.js - Версия: 2.3
+ * filler.js - Версия: 2.4
  * Работает на странице опросника
  * Позволяет выбрать данные из последних звонков
+ * Улучшенные стили Bootstrap и надежность размещения кнопки
  */
 
 // Константы
 const CONFIG = {
-    VERSION: '2.3',
+    VERSION: '2.4',
     RETRY_ATTEMPTS: 3,
     RETRY_DELAY: 1000,
     STORAGE_KEY: 'oprosnikCallHistory'
@@ -183,59 +184,100 @@ function createPasteButton() {
     
     const tryCreateButton = () => {
         attempts++;
-        let targetButton = document.getElementById('create_inst');
+        let targetButton = null;
+        let targetContainer = null;
         
-        if (!targetButton) {
-            console.log(`⏳ Попытка ${attempts}/${maxAttempts}: Кнопка "Ответить" не найдена`);
+        // Улучшенный поиск целевой кнопки и контейнера
+        const searchStrategies = [
+            // Стратегия 1: Поиск по ID
+            () => {
+                const btn = document.getElementById('create_inst');
+                if (btn) {
+                    console.log('✅ Найдена кнопка по ID: create_inst');
+                    return { button: btn, container: btn.parentElement };
+                }
+                return null;
+            },
             
-            // Пробуем найти альтернативные селекторы
-            const alternativeSelectors = [
-                'button[type="submit"]',
-                'input[type="submit"]',
-                '.btn-primary',
-                'button.btn'
-            ];
-            
-            let found = false;
-            for (const selector of alternativeSelectors) {
-                try {
-                    const buttons = document.querySelectorAll(selector);
-                    for (const btn of buttons) {
-                        if (btn.innerText && btn.innerText.includes('Ответить')) {
-                            console.log(`✅ Найдена кнопка по альтернативному селектору: ${selector}`);
-                            targetButton = btn;
-                            found = true;
-                            break;
-                        }
+            // Стратегия 2: Поиск кнопки "Ответить" с классом btn-primary
+            () => {
+                const buttons = document.querySelectorAll('button.btn-primary');
+                for (const btn of buttons) {
+                    if (btn.innerText && btn.innerText.trim() === 'Ответить') {
+                        console.log('✅ Найдена кнопка "Ответить" по классу btn-primary');
+                        return { button: btn, container: btn.parentElement };
                     }
-                    if (found) break;
-                } catch (e) {
-                    console.error('Ошибка при поиске по селектору:', selector, e);
                 }
-            }
+                return null;
+            },
             
-            if (!targetButton) {
-                if (attempts < maxAttempts) {
-                    setTimeout(tryCreateButton, 500);
-                } else {
-                    console.error('❌ Не удалось найти кнопку "Ответить" после', maxAttempts, 'попыток');
-                    showDiagnosticInfo();
+            // Стратегия 3: Общий поиск кнопок с текстом "Ответить"
+            () => {
+                const selectors = ['button', 'input[type="submit"]', '.btn'];
+                for (const selector of selectors) {
+                    try {
+                        const elements = document.querySelectorAll(selector);
+                        for (const el of elements) {
+                            if (el.innerText && el.innerText.includes('Ответить')) {
+                                console.log(`✅ Найдена кнопка по селектору: ${selector}`);
+                                return { button: el, container: el.parentElement };
+                            }
+                        }
+                    } catch (e) {
+                        console.error('Ошибка при поиске по селектору:', selector, e);
+                    }
                 }
-                return;
+                return null;
+            },
+            
+            // Стратегия 4: Поиск по структуре формы (последняя кнопка в форме)
+            () => {
+                const forms = document.querySelectorAll('form');
+                for (const form of forms) {
+                    const buttons = form.querySelectorAll('button[type="button"], input[type="submit"]');
+                    if (buttons.length > 0) {
+                        const lastBtn = buttons[buttons.length - 1];
+                        console.log('✅ Найдена последняя кнопка в форме');
+                        return { button: lastBtn, container: lastBtn.parentElement };
+                    }
+                }
+                return null;
+            }
+        ];
+        
+        // Пробуем каждую стратегию поиска
+        let result = null;
+        for (const strategy of searchStrategies) {
+            result = strategy();
+            if (result) {
+                targetButton = result.button;
+                targetContainer = result.container;
+                break;
             }
         }
-
-        // Более точная проверка существования кнопки
-        const nearbyButtons = targetButton.parentElement ? 
-            targetButton.parentElement.querySelectorAll('.oprosnik-helper-btn') : [];
         
-        let validButtonExists = false;
-        nearbyButtons.forEach(btn => {
-            if (btn.tagName === 'BUTTON' && btn.innerText.includes('Вставить данные')) {
-                validButtonExists = true;
-                console.log('✅ Наша кнопка уже существует и работает');
+        if (!targetButton) {
+            console.log(`⏳ Попытка ${attempts}/${maxAttempts}: Кнопка не найдена`);
+            
+            if (attempts < maxAttempts) {
+                setTimeout(tryCreateButton, 500);
             } else {
-                console.log('🔧 Удаляем невалидный элемент:', btn);
+                console.error('❌ Не удалось найти кнопку "Ответить" после', maxAttempts, 'попыток');
+                showDiagnosticInfo();
+            }
+            return;
+        }
+
+        // Проверяем, не существует ли уже наша кнопка
+        const existingButtons = document.querySelectorAll('.oprosnik-helper-btn');
+        let validButtonExists = false;
+        
+        existingButtons.forEach(btn => {
+            if (btn.tagName === 'BUTTON' && btn.innerText.includes('Вставить данные') && btn.onclick) {
+                validButtonExists = true;
+                console.log('✅ Рабочая кнопка уже существует');
+            } else {
+                console.log('🔧 Удаляем старую/невалидную кнопку:', btn);
                 btn.remove();
             }
         });
@@ -244,42 +286,71 @@ function createPasteButton() {
             return;
         }
 
+        // Создаем контейнер для кнопок (если нужно)
+        let buttonContainer = targetContainer;
+        const needsContainer = !targetContainer.classList.contains('oprosnik-buttons-container');
+        
+        if (needsContainer) {
+            buttonContainer = document.createElement('div');
+            buttonContainer.className = 'oprosnik-buttons-container';
+        }
+        
         // Создаем нашу новую кнопку
         const pasteButton = document.createElement('button');
         pasteButton.innerText = 'Вставить данные о звонке';
         pasteButton.type = 'button';
-        pasteButton.className = 'btn btn-success ml-2 oprosnik-helper-btn';
-        
-        // Добавляем стили для гарантии видимости
-        pasteButton.style.cssText = 'margin-left: 10px !important; display: inline-block !important; visibility: visible !important; opacity: 1 !important;';
+        pasteButton.className = 'btn btn-success oprosnik-helper-btn';
         
         // Добавляем data-атрибуты для диагностики
         pasteButton.setAttribute('data-extension-id', chrome.runtime?.id || 'unknown');
-        pasteButton.setAttribute('data-version', '2.2');
+        pasteButton.setAttribute('data-version', CONFIG.VERSION);
         pasteButton.setAttribute('data-created-at', new Date().toISOString());
 
         // Добавляем обработчик клика
         pasteButton.addEventListener('click', handlePasteButtonClick);
 
-        // Вставляем кнопку
+        // Размещаем кнопку
         try {
-            targetButton.insertAdjacentElement('afterend', pasteButton);
-            console.log('✅ Кнопка вставлена после целевой кнопки');
+            if (needsContainer) {
+                // Если нужен контейнер, создаем его и размещаем после целевой кнопки
+                buttonContainer.appendChild(pasteButton);
+                targetButton.insertAdjacentElement('afterend', buttonContainer);
+                console.log('✅ Кнопка размещена в новом контейнере после целевой кнопки');
+            } else {
+                // Если контейнер уже есть, просто добавляем кнопку
+                buttonContainer.appendChild(pasteButton);
+                console.log('✅ Кнопка добавлена в существующий контейнер');
+            }
             
-            // Проверяем видимость
+            // Проверяем видимость через небольшую задержку
             setTimeout(() => {
-                if (pasteButton.offsetParent === null) {
-                    console.error('⚠️ Кнопка добавлена, но не видима!');
+                const isVisible = pasteButton.offsetParent !== null && 
+                                pasteButton.clientHeight > 0 && 
+                                pasteButton.clientWidth > 0;
+                                
+                if (!isVisible) {
+                    console.error('⚠️ Кнопка добавлена, но не видима! Применяем принудительные стили.');
+                    pasteButton.style.cssText += ' display: inline-block !important; visibility: visible !important; opacity: 1 !important; position: relative !important;';
                 } else {
                     console.log('✅ Кнопка видима и готова к использованию');
                 }
+                
+                // Добавляем индикатор статуса API
+                addStatusIndicator();
             }, 100);
-            
-            // Добавляем индикатор статуса API
-            addStatusIndicator();
             
         } catch (e) {
             console.error('❌ Ошибка при добавлении кнопки:', e);
+            
+            // Fallback: пробуем добавить кнопку прямо в body
+            try {
+                pasteButton.style.cssText += ' position: fixed !important; bottom: 20px !important; right: 20px !important; z-index: 9999 !important;';
+                document.body.appendChild(pasteButton);
+                console.log('🔄 Кнопка добавлена как fallback в нижний правый угол');
+                addStatusIndicator();
+            } catch (fallbackError) {
+                console.error('❌ Критическая ошибка: не удалось добавить кнопку:', fallbackError);
+            }
         }
     };
     
@@ -316,29 +387,46 @@ function addStatusIndicator() {
 function handlePasteButtonClick(event) {
     console.log('🖱️ Кнопка нажата', {
         timestamp: new Date().toISOString(),
-        apiAvailable: !!messageAPI
+        apiAvailable: !!messageAPI,
+        buttonElement: event.target
     });
     
     const button = event.target.closest('.oprosnik-helper-btn');
+    if (!button) {
+        console.error('❌ Не удалось найти кнопку в событии');
+        return;
+    }
+    
+    // Предотвращаем повторные клики
+    if (button.dataset.processing === 'true') {
+        console.log('⏳ Кнопка уже обрабатывается, игнорируем клик');
+        return;
+    }
+    
+    button.dataset.processing = 'true';
     
     // Проверяем инициализацию API
     if (!messageAPI && !initializeMessageAPI()) {
         console.error('❌ Не удалось инициализировать API');
+        button.dataset.processing = 'false';
         tryLocalStorageFallback(button);
         return;
     }
     
     // Показываем пользователю, что идет процесс
     const originalText = button.innerText;
+    const originalBg = button.style.backgroundColor;
+    
     button.innerText = 'Получение данных...';
     button.disabled = true;
+    button.style.backgroundColor = '#ffc107';
 
     // Отправляем сообщение в background.js с запросом данных
     safeSendMessage({ action: 'getCallData' }, (response) => {
         console.log('📨 Обработка ответа:', response);
         
-        button.innerText = originalText; // Возвращаем текст кнопки в любом случае
-        button.disabled = false;
+        // Всегда сбрасываем флаг обработки
+        button.dataset.processing = 'false';
 
         if (response && response.status === 'success' && response.data) {
             console.log('✅ Данные успешно получены:', response.data);
@@ -347,44 +435,60 @@ function handlePasteButtonClick(event) {
             // Если это массив и в нем больше одного звонка, показываем модальное окно.
             if (Array.isArray(response.data) && response.data.length > 1) {
                 console.log(`📚 Найдена история из ${response.data.length} звонков. Показываем выбор.`);
+                button.innerText = originalText;
+                button.disabled = false;
+                button.style.backgroundColor = originalBg;
                 showCallHistoryModal(response.data);
+                return;
             
             // Если это массив, но в нем только один звонок
             } else if (Array.isArray(response.data) && response.data.length === 1) {
                 console.log('📝 В истории только один звонок. Вставляем его.');
                 pasteDataIntoComment(response.data[0]);
-                button.innerText = 'Данные вставлены!';
+                showSuccessState(button, originalText, originalBg);
+                return;
                 
             // Если это не массив, а просто объект одного звонка (для обратной совместимости)
             } else if (typeof response.data === 'object' && response.data !== null && !Array.isArray(response.data)) {
                 console.log('📝 Получен один звонок. Вставляем его.');
                 pasteDataIntoComment(response.data);
-                button.innerText = 'Данные вставлены!';
+                showSuccessState(button, originalText, originalBg);
+                return;
             
             // Если данные пустые
             } else {
-                 console.log('⚠️ Получены пустые данные. Пробуем fallback.');
-                 tryLocalStorageFallback(button);
-                 return; // Выходим, чтобы не показывать "Данные вставлены!"
-            }
-
-            // Возвращаем кнопку в исходное состояние через 2 секунды, если что-то вставили
-            if (button.innerText === 'Данные вставлены!') {
-                button.style.backgroundColor = '#28a745';
-                setTimeout(() => {
-                    button.innerText = originalText;
-                    button.disabled = false;
-                    button.style.backgroundColor = '';
-                }, 2000);
+                console.log('⚠️ Получены пустые данные. Пробуем fallback.');
+                resetButtonState(button, originalText, originalBg);
+                tryLocalStorageFallback(button);
+                return;
             }
 
         } else {
             // Если произошла ошибка
             const errorMessage = response?.message || 'Неизвестная ошибка';
             console.error('❌ Ошибка при получении данных:', errorMessage);
+            resetButtonState(button, originalText, originalBg);
             tryLocalStorageFallback(button);
         }
     });
+}
+
+// Вспомогательные функции для управления состоянием кнопки
+function showSuccessState(button, originalText, originalBg) {
+    button.innerText = 'Данные вставлены!';
+    button.style.backgroundColor = '#28a745';
+    button.disabled = false;
+    
+    setTimeout(() => {
+        button.innerText = originalText;
+        button.style.backgroundColor = originalBg;
+    }, 2000);
+}
+
+function resetButtonState(button, originalText, originalBg) {
+    button.innerText = originalText;
+    button.disabled = false;
+    button.style.backgroundColor = originalBg;
 }
 /**
  * Пробует получить данные из localStorage как fallback
