@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 
 // Типы для данных расширения
@@ -86,6 +86,8 @@ const OprosnikHelperPopup: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedTab, setSelectedTab] = useState<'current' | 'history' | 'stats'>('current');
   const [loading, setLoading] = useState<boolean>(true);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollPosition = useRef<number>(0);
 
   useEffect(() => {
     const loadData = async () => {
@@ -117,10 +119,52 @@ const OprosnikHelperPopup: React.FC = () => {
       }
     };
 
+    // Функция для обновления без сброса скролла
+    const updateData = async () => {
+      try {
+        // Сохраняем текущую позицию скролла
+        if (scrollRef.current) {
+          scrollPosition.current = scrollRef.current.scrollTop;
+        }
+        
+        const data = await chrome.storage.local.get([
+          'callHistory',
+          'lastAgentStatus',
+          'lastUpdate'
+        ]);
+        
+        const tabs = await chrome.tabs.query({
+          url: "https://ssial000ap008.si.rt.ru:8445/desktop/container/*"
+        });
+
+        setCallHistory(data.callHistory || []);
+        setStatus({
+          monitoring: tabs.length > 0,
+          finesse: tabs.length > 0,
+          agentStatus: data.lastAgentStatus || null,
+          lastUpdate: data.lastUpdate || Date.now()
+        });
+      } catch (error) {
+        console.error('Error updating data:', error);
+      }
+    };
+
     loadData();
-    const interval = setInterval(loadData, 2000);
+    const interval = setInterval(updateData, 2000);
     return () => clearInterval(interval);
   }, []);
+
+  // Восстановление позиции скролла после обновления данных
+  useEffect(() => {
+    if (scrollRef.current && !loading && scrollPosition.current > 0) {
+      // Восстанавливаем позицию скролла после рендера
+      requestAnimationFrame(() => {
+        if (scrollRef.current) {
+          scrollRef.current.scrollTop = scrollPosition.current;
+        }
+      });
+    }
+  }, [callHistory, loading]);
 
   // Фильтрация истории по поисковому запросу
   const filteredHistory = useMemo(() => {
@@ -269,7 +313,10 @@ const OprosnikHelperPopup: React.FC = () => {
       </div>
 
       {/* Content */}
-      <div className="p-4 h-80 overflow-y-auto">
+      <div 
+        className="p-4 h-80 overflow-y-auto"
+        ref={scrollRef}
+      >
         {selectedTab === 'current' && (
           <div className="space-y-4">
             {callHistory.length > 0 ? (
