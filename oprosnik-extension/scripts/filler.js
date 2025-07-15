@@ -575,13 +575,8 @@ function pasteDataIntoComment(callData) {
  * Вставляет данные в указанное поле
  */
 function insertDataIntoField(field, callData) {
-    // Используем расчётное время как основное, если доступно
-    let durationText = callData.calculatedDuration || callData.duration || 'Неизвестно';
-    
-    // Если есть время из интерфейса и оно валидное, используем его
-    if (callData.source === 'interface' && callData.interfaceDuration) {
-        durationText = callData.interfaceDuration;
-    }
+    // Используем только расчётное время
+    let durationText = callData.duration || 'Неизвестно';
 
     // Форматируем данные в красивую строку для вставки
     const formattedData = `
