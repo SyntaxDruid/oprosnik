@@ -300,6 +300,7 @@ function createPasteButton() {
         pasteButton.innerText = 'Вставить данные о звонке';
         pasteButton.type = 'button';
         pasteButton.className = 'btn btn-success oprosnik-helper-btn';
+        pasteButton.style.height = '38px';
         
         // Добавляем data-атрибуты для диагностики
         pasteButton.setAttribute('data-extension-id', chrome.runtime?.id || 'unknown');
@@ -368,10 +369,12 @@ function addStatusIndicator() {
     indicator.style.cssText = 'margin-left: 5px; font-size: 12px;';
     
     if (messageAPI) {
-        indicator.innerHTML = '🟢';
+        indicator.innerHTML = '●';
+        indicator.style.color = '#28a745';
         indicator.title = 'API доступен';
     } else {
-        indicator.innerHTML = '🔴';
+        indicator.innerHTML = '●';
+        indicator.style.color = '#dc3545';
         indicator.title = 'API недоступен';
     }
     
@@ -528,7 +531,7 @@ function tryLocalStorageFallback(button) {
     } catch (e) {
         console.error('❌ Ошибка при чтении localStorage:', e);
         alert('Ошибка: Не удалось получить данные о звонках.\n\nУбедитесь, что:\n1. Открыта вкладка Cisco Finesse\n2. Был завершен хотя бы один звонок');
-        button.innerText = 'Вставить данные о звонке';
+        button.innerText = 'Введите данные о звонке';
         button.disabled = false;
     }
 }
