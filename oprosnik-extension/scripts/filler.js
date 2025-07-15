@@ -301,6 +301,7 @@ function createPasteButton() {
         pasteButton.type = 'button';
         pasteButton.className = 'btn btn-success oprosnik-helper-btn';
         pasteButton.style.height = '38px';
+        pasteButton.style.fontSize = '16px';
         
         // Добавляем data-атрибуты для диагностики
         pasteButton.setAttribute('data-extension-id', chrome.runtime?.id || 'unknown');
@@ -336,8 +337,7 @@ function createPasteButton() {
                     console.log('✅ Кнопка видима и готова к использованию');
                 }
                 
-                // Добавляем индикатор статуса API
-                addStatusIndicator();
+                // Индикатор статуса API удален
             }, 100);
             
         } catch (e) {
@@ -348,7 +348,6 @@ function createPasteButton() {
                 pasteButton.style.cssText += ' position: fixed !important; bottom: 20px !important; right: 20px !important; z-index: 9999 !important;';
                 document.body.appendChild(pasteButton);
                 console.log('🔄 Кнопка добавлена как fallback в нижний правый угол');
-                addStatusIndicator();
             } catch (fallbackError) {
                 console.error('❌ Критическая ошибка: не удалось добавить кнопку:', fallbackError);
             }
