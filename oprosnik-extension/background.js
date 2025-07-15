@@ -5,6 +5,37 @@
 
 console.log('🚀 Background Service Worker с активным мониторингом запущен');
 
+// Глобальная конфигурация
+let CONFIG = null;
+
+// Загружаем конфигурацию
+async function loadConfig() {
+    try {
+        const response = await fetch(chrome.runtime.getURL('config.json'));
+        CONFIG = await response.json();
+        console.log('✅ Конфигурация загружена:', CONFIG.version);
+    } catch (error) {
+        console.error('❌ Ошибка загрузки конфигурации:', error);
+        // Fallback конфигурация
+        CONFIG = {
+            selectors: {
+                agentStatus: { selector: '#voice-state-select-headerOptionText' },
+                phoneNumber: { selector: '[aria-label*="Участник"]' },
+                region: { 
+                    primary: '[class*="callVariableValue"] span',
+                    fallback: '[id*="call-header-variable-value"]'
+                }
+            },
+            monitoring: {
+                finesseUrl: 'https://ssial000ap008.si.rt.ru:8445/desktop/container/*',
+                statusCheckInterval: 3000,
+                activeCallInterval: 1000,
+                maxCallHistory: 10
+            }
+        };
+    }
+}
+
 // Функции для выполнения на странице (должны быть вне класса)
 function extractAgentStatus() {
     const statusEl = document.querySelector('#voice-state-select-headerOptionText');
@@ -52,10 +83,6 @@ class FinesseActiveMonitor {
         this.callEndTime = null;
         this.calculatedDuration = null;
         
-        // Интервалы мониторинга
-        this.statusCheckInterval = 3000; // Проверка статуса каждые 3 сек
-        this.activeCallInterval = 1000;  // Во время звонка каждую секунду
-        
         this.init();
     }
     
@@ -72,6 +99,9 @@ class FinesseActiveMonitor {
     async init() {
         console.log('📡 Инициализация FinesseActiveMonitor...');
         
+        // Загружаем конфигурацию
+        await loadConfig();
+        
         // Загружаем сохраненные данные
         await this.loadStoredData();
         
@@ -80,7 +110,7 @@ class FinesseActiveMonitor {
         
         // Создаем alarm для периодической проверки
         chrome.alarms.create('finesseStatusCheck', {
-            periodInMinutes: 0.05 // каждые 3 секунды
+            periodInMinutes: CONFIG.monitoring.statusCheckInterval / 60000 // конвертируем мс в минуты
         });
         
         // Слушаем изменения вкладок
@@ -90,7 +120,7 @@ class FinesseActiveMonitor {
     
     async findFinesseTab() {
         const tabs = await chrome.tabs.query({
-            url: "https://ssial000ap008.si.rt.ru:8445/desktop/container/*"
+            url: CONFIG.monitoring.finesseUrl
         });
         
         if (tabs.length > 0) {
@@ -183,7 +213,7 @@ class FinesseActiveMonitor {
     // Начинаем активный мониторинг звонка
     startActiveCallMonitoring() {
         chrome.alarms.create('activeCallMonitor', {
-            periodInMinutes: 0.0167 // каждую секунду
+            periodInMinutes: CONFIG.monitoring.activeCallInterval / 60000 // конвертируем мс в минуты
         });
         this.captureCallData();
     }
@@ -241,8 +271,8 @@ class FinesseActiveMonitor {
         
         // Добавляем в историю
         this.callHistory.unshift(finalCallData);
-        if (this.callHistory.length > 10) {
-            this.callHistory = this.callHistory.slice(0, 10);
+        if (this.callHistory.length > CONFIG.monitoring.maxCallHistory) {
+            this.callHistory = this.callHistory.slice(0, CONFIG.monitoring.maxCallHistory);
         }
         
         // Сохраняем в chrome.storage

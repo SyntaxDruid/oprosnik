@@ -5,13 +5,51 @@
  * Улучшенные стили Bootstrap и надежность размещения кнопки
  */
 
-// Константы
-const CONFIG = {
-    VERSION: '2.4',
-    RETRY_ATTEMPTS: 3,
-    RETRY_DELAY: 1000,
-    STORAGE_KEY: 'oprosnikCallHistory'
-};
+// Глобальная конфигурация
+let CONFIG = null;
+
+// Загружаем конфигурацию
+async function loadConfig() {
+    try {
+        const response = await fetch(chrome.runtime.getURL('config.json'));
+        CONFIG = await response.json();
+        console.log('✅ Конфигурация загружена в filler.js:', CONFIG.version);
+    } catch (error) {
+        console.error('❌ Ошибка загрузки конфигурации в filler.js:', error);
+        // Fallback конфигурация
+        CONFIG = {
+            version: '2.4',
+            selectors: {
+                commentField: {
+                    primary: '#comment_',
+                    alternatives: [
+                        'textarea[name="comment"]',
+                        'textarea[id*="comment"]',
+                        '.form-control[placeholder*="комментарий"]',
+                        'textarea.form-control'
+                    ]
+                },
+                targetButtons: {
+                    strategies: [
+                        { name: 'По ID', selector: '#create_inst' },
+                        { name: 'По классу и тексту', selector: 'button.btn-primary', text: 'Ответить' }
+                    ]
+                }
+            },
+            ui: {
+                button: {
+                    text: 'Вставить данные о звонке',
+                    className: 'btn btn-success oprosnik-helper-btn',
+                    height: '38px',
+                    fontSize: '16px'
+                }
+            },
+            dataFormat: {
+                template: 'Номер телефона: {phone}\nДлительность: {duration}\nРегион: {region}\n'
+            }
+        };
+    }
+}
 
 // Проверка доступности Chrome API
 const diagnostics = {
@@ -297,15 +335,15 @@ function createPasteButton() {
         
         // Создаем нашу новую кнопку
         const pasteButton = document.createElement('button');
-        pasteButton.innerText = 'Вставить данные о звонке';
+        pasteButton.innerText = CONFIG.ui.button.text;
         pasteButton.type = 'button';
-        pasteButton.className = 'btn btn-success oprosnik-helper-btn';
-        pasteButton.style.height = '38px';
-        pasteButton.style.fontSize = '16px !important';
+        pasteButton.className = CONFIG.ui.button.className;
+        pasteButton.style.height = CONFIG.ui.button.height;
+        pasteButton.style.fontSize = CONFIG.ui.button.fontSize + ' !important';
         
         // Добавляем data-атрибуты для диагностики
         pasteButton.setAttribute('data-extension-id', chrome.runtime?.id || 'unknown');
-        pasteButton.setAttribute('data-version', CONFIG.VERSION);
+        pasteButton.setAttribute('data-version', CONFIG.version);
         pasteButton.setAttribute('data-created-at', new Date().toISOString());
 
         // Добавляем обработчик клика
@@ -542,18 +580,11 @@ function tryLocalStorageFallback(button) {
 function pasteDataIntoComment(callData) {
     console.log('📝 Вставка данных в комментарий...');
     
-    let commentTextarea = document.getElementById('comment_');
+    let commentTextarea = document.querySelector(CONFIG.selectors.commentField.primary);
     if (!commentTextarea) {
-        console.error('❌ Не найдено поле для комментария (#comment_)');
+        console.error('❌ Не найдено поле для комментария:', CONFIG.selectors.commentField.primary);
         // Пробуем найти по другим селекторам
-        const alternativeSelectors = [
-            'textarea[name="comment"]',
-            'textarea[id*="comment"]',
-            '.form-control[placeholder*="комментарий"]',
-            'textarea.form-control'
-        ];
-        
-        for (const selector of alternativeSelectors) {
+        for (const selector of CONFIG.selectors.commentField.alternatives) {
             const element = document.querySelector(selector);
             if (element) {
                 console.log('✅ Найдено альтернативное поле:', selector);
@@ -578,12 +609,11 @@ function insertDataIntoField(field, callData) {
     // Используем только расчётное время
     let durationText = callData.duration || 'Неизвестно';
 
-    // Форматируем данные в красивую строку для вставки
-    const formattedData = `
-Номер телефона: ${callData.phone}
-Длительность: ${durationText}
-Регион: ${callData.region}
-`;
+    // Форматируем данные используя шаблон из конфигурации
+    const formattedData = CONFIG.dataFormat.template
+        .replace('{phone}', callData.phone)
+        .replace('{duration}', durationText)
+        .replace('{region}', callData.region);
 
     // Сохраняем текущее значение
     const currentValue = field.value;
@@ -667,16 +697,24 @@ console.log('🏁 Инициализация расширения...');
 const apiInitialized = initializeMessageAPI();
 console.log('📡 API инициализирован:', apiInitialized);
 
-// Ждем, пока страница полностью загрузится
-if (document.readyState === 'loading') {
-    console.log('⏳ Ожидание загрузки DOM...');
-    document.addEventListener('DOMContentLoaded', () => {
-        console.log('✅ DOM загружен');
+// Асинхронная инициализация
+async function initializeExtension() {
+    await loadConfig();
+    
+    // Ждем, пока страница полностью загрузится
+    if (document.readyState === 'loading') {
+        console.log('⏳ Ожидание загрузки DOM...');
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('✅ DOM загружен');
+            createPasteButton();
+        });
+    } else {
+        console.log('✅ DOM уже загружен');
         createPasteButton();
-    });
-} else {
-    console.log('✅ DOM уже загружен');
-    createPasteButton();
+    }
 }
+
+// Запускаем инициализацию
+initializeExtension();
 
 console.log('✅ Oprosnik Helper: Filler Script полностью загружен');

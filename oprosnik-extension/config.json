@@ -1,0 +1,83 @@
+{
+  "version": "1.0.0",
+  "description": "Конфигурация селекторов для Oprosnik Helper",
+  "selectors": {
+    "agentStatus": {
+      "description": "Селектор для статуса агента",
+      "selector": "#voice-state-select-headerOptionText"
+    },
+    "phoneNumber": {
+      "description": "Селектор для номера телефона участника",
+      "selector": "[aria-label*=\"Участник\"]"
+    },
+    "region": {
+      "description": "Селекторы для региона",
+      "primary": "[class*=\"callVariableValue\"] span",
+      "fallback": "[id*=\"call-header-variable-value\"]"
+    },
+    "commentField": {
+      "description": "Селекторы для поля комментария",
+      "primary": "#comment_",
+      "alternatives": [
+        "textarea[name=\"comment\"]",
+        "textarea[id*=\"comment\"]",
+        ".form-control[placeholder*=\"комментарий\"]",
+        "textarea.form-control"
+      ]
+    },
+    "targetButtons": {
+      "description": "Селекторы для поиска целевых кнопок",
+      "strategies": [
+        {
+          "name": "По ID",
+          "selector": "#create_inst",
+          "description": "Поиск кнопки по ID create_inst"
+        },
+        {
+          "name": "По классу и тексту",
+          "selector": "button.btn-primary",
+          "text": "Ответить",
+          "description": "Поиск кнопки 'Ответить' с классом btn-primary"
+        },
+        {
+          "name": "Общий поиск",
+          "selectors": ["button", "input[type=\"submit\"]", ".btn"],
+          "text": "Ответить",
+          "description": "Общий поиск кнопок с текстом 'Ответить'"
+        },
+        {
+          "name": "По структуре формы",
+          "selector": "form",
+          "childSelectors": ["button[type=\"button\"]", "input[type=\"submit\"]"],
+          "description": "Поиск последней кнопки в форме"
+        }
+      ]
+    }
+  },
+  "monitoring": {
+    "description": "Настройки мониторинга",
+    "finesseUrl": "https://ssial000ap008.si.rt.ru:8445/desktop/container/*",
+    "statusCheckInterval": 3000,
+    "activeCallInterval": 1000,
+    "maxCallHistory": 10
+  },
+  "ui": {
+    "description": "Настройки интерфейса",
+    "button": {
+      "text": "Вставить данные о звонке",
+      "className": "btn btn-success oprosnik-helper-btn",
+      "height": "38px",
+      "fontSize": "16px"
+    },
+    "modal": {
+      "title": "Выберите звонок для вставки",
+      "backgroundColor": "rgba(0, 0, 0, 0.5)",
+      "borderRadius": "8px",
+      "padding": "20px"
+    }
+  },
+  "dataFormat": {
+    "description": "Формат данных для вставки",
+    "template": "Номер телефона: {phone}\nДлительность: {duration}\nРегион: {region}\n"
+  }
+}
