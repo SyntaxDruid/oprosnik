@@ -258,19 +258,23 @@ class FinesseActiveMonitor {
         chrome.alarms.clear('activeCallMonitor');
         
         let captureAttempts = 0;
-        const maxAttempts = 3;
+        const maxAttempts = 10; // Увеличиваем количество попыток
         const captureWindow = 3000;
         const startTime = Date.now();
+        
+        console.log('🔄 Начинаем захват времени из интерфейса в течение 3 секунд...');
         
         const attemptCapture = async () => {
             const elapsed = Date.now() - startTime;
             
             if (elapsed > captureWindow) {
+                console.log('⏰ Время вышло, завершаем с расчётным временем');
                 await this.finalizeCallWithCalculatedDuration();
                 return;
             }
             
             captureAttempts++;
+            console.log(`🔍 Попытка ${captureAttempts}/${maxAttempts} захвата времени (${elapsed}ms)`);
             await this.captureCallData();
             
             const hasValidDuration = this.currentCallData?.duration && 
@@ -278,6 +282,7 @@ class FinesseActiveMonitor {
                                    /\d{2}:\d{2}:\d{2}/.test(this.currentCallData.duration);
             
             if (hasValidDuration) {
+                console.log('✅ Получено время из интерфейса:', this.currentCallData.duration);
                 await this.finalizeCall();
                 return;
             }
@@ -289,8 +294,8 @@ class FinesseActiveMonitor {
                 return;
             }
             
-            // Следующая попытка через 100мс (очень быстро)
-            setTimeout(attemptCapture, 100);
+            // Следующая попытка через 300мс (более частые проверки)
+            setTimeout(attemptCapture, 300);
         };
         
         // Начинаем сразу, без задержки
@@ -347,15 +352,26 @@ class FinesseActiveMonitor {
         
         console.log('💾 Финализация звонка с данными из интерфейса:', this.currentCallData);
         
-        // Временно всегда используем расчётное время до починки интерфейсного
         const interfaceDuration = this.currentCallData.duration;
         const calculatedDuration = this.calculatedDuration;
         
-        // Всегда используем расчётное время
+        // Определяем лучшее время: приоритет интерфейсу, fallback на расчётное
         let finalDuration = calculatedDuration || '00:00:00';
         let durationSource = 'calculated';
         
-        console.log('🕐 Используем расчётное время (временное решение)');
+        // Проверяем валидность времени из интерфейса
+        const isInterfaceValid = interfaceDuration && 
+                               interfaceDuration !== '00:00:00' &&
+                               /\d{2}:\d{2}:\d{2}/.test(interfaceDuration) &&
+                               !this.isDurationTooShort(interfaceDuration);
+        
+        if (isInterfaceValid) {
+            finalDuration = interfaceDuration;
+            durationSource = 'interface';
+            console.log('🕐 Используем время из интерфейса:', interfaceDuration);
+        } else {
+            console.log('🕐 Время из интерфейса невалидно, используем расчётное:', calculatedDuration);
+        }
         
         // Добавляем метаданные
         const finalCallData = {
