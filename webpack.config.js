@@ -1,5 +1,6 @@
 const path = require('path');
 const CopyPlugin = require('copy-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 
 module.exports = {
   entry: {
@@ -8,12 +9,26 @@ module.exports = {
     'scripts/filler': './oprosnik-extension/scripts/filler.js',
     'scripts/form-modifier': './oprosnik-extension/scripts/form-modifier.js',
     'scripts/parser': './oprosnik-extension/scripts/parser.js',
-    'scripts/sidebar-hider': './oprosnik-extension/scripts/sidebar-delay.js'
+    'scripts/sidebar-delay': './oprosnik-extension/scripts/sidebar-delay.js'
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: '[name].js',
     clean: true
+  },
+  optimization: {
+    minimize: true,
+    splitChunks: false,
+    minimizer: [
+      new TerserPlugin({
+        extractComments: false,
+        terserOptions: {
+          format: {
+            comments: false,
+          },
+        },
+      }),
+    ],
   },
   module: {
     rules: [
