@@ -133,12 +133,13 @@ function generateTooltipStyles() {
         border: 1px solid #1976d2;
         border-radius: 10px;
         padding: 14px 18px;
-        margin-top: 12px;
+        margin-top: 20px;
         font-size: 13px;
         color: #0d47a1;
         display: block;
         position: relative;
         box-shadow: 0 4px 12px rgba(25, 118, 210, 0.12);
+        clear: both;
       }
       
       
@@ -354,9 +355,10 @@ function addCommentHint(id, hintText, label) {
   const hintElement = document.createElement('div');
   hintElement.id = id;
   hintElement.className = 'oprosnik-comment-hint';
-  hintElement.style.marginTop = '12px';
+  hintElement.style.marginTop = '20px';
   hintElement.style.width = textareaWidth + 'px';
   hintElement.style.clear = 'both';
+  hintElement.style.position = 'relative';
   
   hintElement.innerHTML = `<strong>${label}</strong> ${hintText}`;
   
