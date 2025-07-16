@@ -1,0 +1,69 @@
+<div class="tab-content pt-2">
+		<div class="tab-pane fade show active" id="appeal-create" role="tabpanel" aria-labelledby="appeal-create">
+			<div class="row mb-2" style="width: 645px;">
+				<div class="input-group col-sm">
+					<div class="input-group-prepend">
+						<span class="input-group-text">МРФ:</span>
+					</div>
+					<select class="custom-select" id="mrf_id">
+					<option title="" value="-1"></option><option value="13">Волга</option><option value="17">Дальний Восток</option><option value="0">Не определен</option><option value="12">Северо-Запад</option><option value="16">Сибирь</option><option value="15">Урал</option><option value="11">Центр</option><option value="14">Юг</option></select>
+				</div>	
+			</div>
+			<div class="row mb-2" style="width: 645px;">
+				<div class="input-group col-sm">
+					<div class="input-group-prepend">
+						<span class="input-group-text">РФ:</span>
+					</div>
+					<select class="custom-select" id="rf_id"><option title="" value="-1"></option><option title="" value="262">Алтайский филиал</option><option title="" value="269">Бурятский филиал</option><option title="" value="263">Забайкальский филиал</option><option title="" value="270">Иркутский филиал</option><option title="" value="267">Кемеровский филиал</option><option title="" value="268">Красноярский филиал</option><option title="" value="266">Новосибирский филиал</option><option title="" value="264">Омский филиал</option><option title="" value="265">Томский филиал</option></select>
+				</div>	
+			</div>
+			<div class="row mb-2" style="width: 645px;">
+				<div class="input-group col-sm">
+					<div class="input-group-prepend">
+						<span class="input-group-text">Инициатора звонка:</span>
+					</div>
+					<select class="custom-select" id="type_group"><option title="" value=""></option><option title="" value="3ЛТП">3ЛТП</option><option title="" value="Инсталляция">Инсталляция</option><option title="" value="КДГ 3 ЛТП">КДГ 3 ЛТП</option><option title="" value="КЛЮЧ">КЛЮЧ</option><option title="" value="Разное">Разное</option></select>
+				</div>
+			</div>
+			<div class="row mb-2" style="width: 645px;">
+				<div class="input-group col-sm" style="position: relative;">
+					<div class="input-group-prepend">
+						<span class="input-group-text">Проблема:</span>
+					</div>
+					<select class="custom-select" id="type_id"><option title="" value="0"></option><option title="" value="49">Вопросы информационного характера (консультация)</option><option title="" value="51">Замена CPE, настройка </option><option title="" value="343">Замена STB (отвязка mac)</option><option title="" value="376">Изменение привязки PPPoE</option><option title="" value="36">Настроить доп. lan-порт под услугу через ACS</option><option title="" value="55">Настройка порта PON/FTTb/ADSL</option><option title="" value="57">Некорректные действия Инсталлятора</option><option title="" value="62">Некорректные действия НПП</option><option title="" value="38">Не работает услуга. Диагностика неисправности</option><option title="" value="377">Отсутствует попытка активации инсталлятором через приложение (ЕЦМ / АРМ-ПМ)</option><option title="" value="372">Ошибка HPSA</option><option title="" value="42">Переключение/переезд настройка сервисов</option><option title="" value="380">Сброс ошибок на порту</option><option title="" value="383">Уточнение актуальных тех. данных/поиск порта</option></select>
+				<div class="oprosnik-hint-container">
+    <div class="oprosnik-hint-display">Старый и новый логин PPPoE</div>
+  </div></div>	
+			</div>
+			<div class="row mb-2" style="width: 645px; display: none;">
+				<div class="input-group col-sm">
+					<div class="input-group-prepend">
+						<span class="input-group-text">Длительность звонка:</span>
+					</div>
+					<select class="custom-select" id="call_duration_id">
+					<option value="0"></option><option value="1">0-1</option><option value="2">1-2</option><option value="3">2-3</option><option value="4">3-4</option><option value="5">4-5</option><option value="6">5+</option></select>
+				</div>
+			</div>
+			<div class="row mb-2" style="width: 645px;">
+				<div class="input-group col-sm">
+					<div class="input-group-prepend">
+						<span class="input-group-text">Номер наряд:</span>
+					</div>
+					<input class="form-control" type="text" id="pi_key">
+				</div>
+			</div>
+			<div class="row mb">
+				<div class="input-group col-sm">
+					<div class="input-group-prepend">
+						<span class="input-group-text">Комментарий:</span>
+					</div>
+				</div>
+			</div>
+			<div class="input-group col-sm">
+				<div class="row mb-2">
+					<textarea class="form-control" id="comment_" rows="2" maxlength="1000" placeholder="Максимальная длина сообщения - 1000 символов, использование спецсимволов желательно избегать" style="width: 630px; height: 150px;"></textarea>
+				</div>
+			</div><div id="oprosnik-comment-hint-1" class="oprosnik-comment-hint" style="margin-top: 8px; width: 100%;"><strong>Рекомендации:</strong> Детали: причина смены, результат тестирования нового логина</div>
+			<button type="button" class="btn btn-primary" id="create_inst">Ответить</button><div class="oprosnik-buttons-container"><button type="button" class="btn btn-success oprosnik-helper-btn" data-extension-id="kebphgiceiamplgbffbolphhlghnaopi" data-version="1.0.0" data-created-at="2025-07-16T06:05:27.504Z" style="height: 38px;">Вставить данные о звонке</button></div>
+		</div>
+	</div>
