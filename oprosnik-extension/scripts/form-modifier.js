@@ -1,76 +1,56 @@
 /**
  * form-modifier.js
- * Версия: 5.0
+ * Версия: 6.0
  *
  * Этот скрипт модифицирует элементы формы опросника:
  * - Скрывает ненужные поля
  * - Удаляет лишние опции из выпадающих списков
  * - Добавляет контекстные подсказки для каждого типа проблемы
  */
-console.log('Oprosnik Helper: Form Modifier Script v5.0 Loaded.');
+console.log('Oprosnik Helper: Form Modifier Script v6.0 Loaded.');
 
-// Конфигурация подсказок для каждого type_id
-const TYPE_HINTS = {
-  // 3ЛТП
-  333: "Укажите точные технические данные клиента и какие именно настройки не соответствуют",
-  12: "Предоставьте подробную консультацию, укажите тему вопроса",
-  335: "Опишите проблему, не входящую в стандартные категории",
-  13: "Укажите модель заменяемого CPE и причину замены",
-  14: "Укажите старый и новый MAC-адрес STB",
-  15: "Укажите старый и новый логин PPPoE",
-  336: "Укажите номер LAN-порта и услугу",
-  16: "Укажите тип порта (PON/FTTb/ADSL) и выполненные настройки",
-  17: "Опишите симптомы неработающей услуги и результаты диагностики",
-  19: "Объясните, почему не была предпринята попытка через ЕЦМ/АРМ-ПМ",
-  354: "Укажите данные присоединенного оператора",
-  23: "Результат проверки наличия сессии",
-  374: "Какие ошибки были сброшены на порту",
-  28: "Старый и новый профиль АДСЛ (ручная настройка)",
-  
-  // Инсталляция
-  49: "Предоставьте подробную консультацию по инсталляции",
-  400: "Укажите номер и причину бронирования SIM карты",
-  51: "Модель CPE и выполненные настройки",
-  343: "Старый и новый MAC-адрес STB",
-  376: "Старый и новый логин PPPoE",
-  55: "Тип порта и настройки",
-  57: "Опишите некорректные действия Инсталлятора",
-  62: "Опишите некорректные действия НПП",
-  38: "Результаты диагностики неисправности",
-  377: "Почему инсталлятор не активировал через приложение",
-  372: "Описание ошибки HPSA",
-  42: "Детали переключения/переезда",
-  380: "Какие ошибки сброшены",
-  383: "Уточненные тех. данные/порт",
-  
-  // КДГ 1 ЛТП
-  359: "Опишите проблему с КТВ/ЦТВ",
-  360: "Опишите проблему с Радио",
-  361: "Время, когда специалист 3 ЛТП не вышел на связь",
-  
-  // КДГ 3 ЛТП
-  389: "Какой признак NRFS создан/снят",
-  406: "Результат дозвона до клиента по просьбе 3 ЛТП",
-  363: "Номер закрытого наряда",
-  366: "Старое и новое время визита",
-  386: "Номер КИ и ГП (СИ)",
-  385: "Номер созданного ГП (СИ)",
-  368: "Уточненные условия договора по оборудованию",
-  
-  // КЛЮЧ
-  397: "Видеонаблюдение: результаты диагностики",
-  396: "Домофон: результаты диагностики",
-  395: "Домофон: выполненные настройки по запросу ВС",
-  
-  // Разное
-  63: "Опишите личную просьбу",
-  64: "Укажите правильный номер",
-  393: "Подтвердите, что проблема решена",
-  387: "Причина сброса звонка"
+// Конфигурация подсказок (загружается из JSON)
+let hintsConfig = {
+  hints: {
+    type_id: {}
+  },
+  ui: {
+    tooltip_styles: {
+      hint_icon: {
+        background_color: "#007bff",
+        hover_color: "#0056b3",
+        size: "20px"
+      },
+      comment_hint_icon: {
+        background_color: "#1976d2",
+        hover_color: "#1565c0",
+        size: "20px"
+      },
+      tooltip_width: "320px",
+      tooltip_background: "#333"
+    }
+  }
 };
 
-// Стили для подсказок
-const TOOLTIP_STYLES = `
+// Функция загрузки конфигурации подсказок
+async function loadHintsConfig() {
+  try {
+    const response = await fetch(chrome.runtime.getURL('hints-config.json'));
+    if (response.ok) {
+      hintsConfig = await response.json();
+      console.log('📋 Конфигурация подсказок загружена из JSON');
+    } else {
+      console.warn('⚠️ Не удалось загрузить конфигурацию подсказок, используется встроенная');
+    }
+  } catch (error) {
+    console.error('❌ Ошибка загрузки конфигурации подсказок:', error);
+  }
+}
+
+// Генерация стилей на основе конфигурации
+function generateTooltipStyles() {
+  const config = hintsConfig.ui.tooltip_styles;
+  return `
   <style>
     .oprosnik-hint-container {
       position: relative;
@@ -83,9 +63,9 @@ const TOOLTIP_STYLES = `
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 20px;
-      height: 20px;
-      background-color: #007bff;
+      width: ${config.hint_icon.size};
+      height: ${config.hint_icon.size};
+      background-color: ${config.hint_icon.background_color};
       color: white;
       border-radius: 50%;
       cursor: help;
@@ -98,7 +78,7 @@ const TOOLTIP_STYLES = `
     }
     
     .oprosnik-hint-icon:hover {
-      background-color: #0056b3;
+      background-color: ${config.hint_icon.hover_color};
       transform: scale(1.1);
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }
@@ -108,13 +88,13 @@ const TOOLTIP_STYLES = `
       left: 30px;
       top: 50%;
       transform: translateY(-50%);
-      background-color: #333;
+      background-color: ${config.tooltip_background};
       color: white;
       padding: 12px 16px;
       border-radius: 8px;
       font-size: 13px;
       line-height: 1.4;
-      width: 320px;
+      width: ${config.tooltip_width};
       z-index: 1000;
       opacity: 0;
       pointer-events: none;
@@ -129,7 +109,7 @@ const TOOLTIP_STYLES = `
       top: 50%;
       transform: translateY(-50%);
       border: 8px solid transparent;
-      border-right-color: #333;
+      border-right-color: ${config.tooltip_background};
     }
     
     .oprosnik-hint-container:hover .oprosnik-hint-tooltip {
@@ -168,9 +148,9 @@ const TOOLTIP_STYLES = `
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 20px;
-      height: 20px;
-      background-color: #1976d2;
+      width: ${config.comment_hint_icon.size};
+      height: ${config.comment_hint_icon.size};
+      background-color: ${config.comment_hint_icon.background_color};
       color: white;
       border-radius: 50%;
       cursor: help;
@@ -186,7 +166,7 @@ const TOOLTIP_STYLES = `
     }
     
     .oprosnik-comment-hint-icon:hover {
-      background-color: #1565c0;
+      background-color: ${config.comment_hint_icon.hover_color};
       transform: scale(1.1);
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }
@@ -196,13 +176,13 @@ const TOOLTIP_STYLES = `
       left: 30px;
       top: 50%;
       transform: translateY(-50%);
-      background-color: #333;
+      background-color: ${config.tooltip_background};
       color: white;
       padding: 12px 16px;
       border-radius: 8px;
       font-size: 13px;
       line-height: 1.4;
-      width: 320px;
+      width: ${config.tooltip_width};
       z-index: 1000;
       opacity: 0;
       pointer-events: none;
@@ -218,7 +198,7 @@ const TOOLTIP_STYLES = `
       top: 50%;
       transform: translateY(-50%);
       border: 8px solid transparent;
-      border-right-color: #333;
+      border-right-color: ${config.tooltip_background};
     }
     
     .oprosnik-comment-hint-icon:hover .oprosnik-comment-hint-tooltip {
@@ -226,7 +206,8 @@ const TOOLTIP_STYLES = `
       transform: translateY(-50%) translateX(5px);
     }
   </style>
-`;
+  `;
+}
 
 /**
  * Инициализация: добавляем стили на страницу
@@ -235,7 +216,7 @@ function initializeStyles() {
   if (!document.getElementById('oprosnik-hint-styles')) {
     const styleElement = document.createElement('div');
     styleElement.id = 'oprosnik-hint-styles';
-    styleElement.innerHTML = TOOLTIP_STYLES;
+    styleElement.innerHTML = generateTooltipStyles();
     document.head.appendChild(styleElement);
   }
 }
@@ -319,7 +300,7 @@ function addTypeIdHint() {
   // Добавляем обработчик изменения
   typeIdSelect.addEventListener('change', function() {
     const selectedValue = this.value;
-    const hint = TYPE_HINTS[selectedValue];
+    const hintData = hintsConfig.hints.type_id[selectedValue];
     
     // Удаляем старую подсказку
     const existingHint = typeIdContainer.querySelector('.oprosnik-hint-container');
@@ -328,14 +309,14 @@ function addTypeIdHint() {
     }
     
     // Добавляем новую подсказку, если есть
-    if (hint && selectedValue != 0) {
-      const hintElement = createHintElement(hint);
+    if (hintData && selectedValue != 0) {
+      const hintElement = createHintElement(hintData.hint1);
       typeIdSelect.parentNode.appendChild(hintElement);
       
-      // Также обновляем подсказку в поле комментария
-      updateCommentHint(hint);
+      // Также обновляем подсказки в поле комментария
+      updateCommentHints(hintData);
     } else {
-      updateCommentHint(null);
+      updateCommentHints(null);
     }
   });
 }
@@ -356,44 +337,75 @@ function createCommentHintIcon(hint) {
 }
 
 /**
- * Обновляет подсказку под полем комментария
+ * Обновляет подсказки под полем комментария
  */
-function updateCommentHint(hint) {
+function updateCommentHints(hintData) {
   const commentTextarea = document.getElementById('comment_');
   if (!commentTextarea) return;
   
   const commentContainer = commentTextarea.closest('.row');
   if (!commentContainer) return;
   
-  // Находим или создаем элемент подсказки
-  let hintElement = document.getElementById('oprosnik-comment-hint');
-  if (!hintElement) {
-    hintElement = document.createElement('div');
-    hintElement.id = 'oprosnik-comment-hint';
-    hintElement.className = 'oprosnik-comment-hint';
-    commentContainer.appendChild(hintElement);
-  }
+  // Удаляем старые подсказки
+  removeAllCommentHints();
   
-  // Удаляем старую иконку подсказки
-  const oldIcon = commentContainer.querySelector('.oprosnik-comment-hint-icon');
-  if (oldIcon) {
-    oldIcon.parentElement.remove();
-  }
-  
-  if (hint) {
-    hintElement.innerHTML = `<strong>Подсказка:</strong> ${hint}`;
-    hintElement.style.display = 'block';
+  if (hintData && hintData.hint1 && hintData.hint2) {
+    // Первая подсказка
+    addCommentHint('oprosnik-comment-hint-1', hintData.hint1, 'Основная информация:', '8px');
     
-    // Добавляем иконку подсказки
-    const hintIcon = createCommentHintIcon(hint);
-    hintElement.appendChild(hintIcon);
-  } else {
-    hintElement.style.display = 'none';
+    // Вторая подсказка
+    addCommentHint('oprosnik-comment-hint-2', hintData.hint2, 'Дополнительные детали:', '16px');
+  }
+}
+
+/**
+ * Добавляет подсказку под полем комментария
+ */
+function addCommentHint(id, hintText, label, marginTop) {
+  const commentTextarea = document.getElementById('comment_');
+  if (!commentTextarea) return;
+  
+  const commentContainer = commentTextarea.closest('.row');
+  if (!commentContainer) return;
+  
+  const hintElement = document.createElement('div');
+  hintElement.id = id;
+  hintElement.className = 'oprosnik-comment-hint';
+  hintElement.style.marginTop = marginTop;
+  
+  hintElement.innerHTML = `<strong>${label}</strong> ${hintText}`;
+  
+  // Добавляем иконку подсказки
+  const hintIcon = createCommentHintIcon(hintText);
+  hintElement.appendChild(hintIcon);
+  
+  commentContainer.appendChild(hintElement);
+  hintElement.style.display = 'block';
+}
+
+/**
+ * Удаляет все подсказки комментариев
+ */
+function removeAllCommentHints() {
+  const hint1 = document.getElementById('oprosnik-comment-hint-1');
+  const hint2 = document.getElementById('oprosnik-comment-hint-2');
+  
+  if (hint1) hint1.remove();
+  if (hint2) hint2.remove();
+  
+  // Удаляем старые иконки подсказок
+  const commentContainer = document.getElementById('comment_')?.closest('.row');
+  if (commentContainer) {
+    const oldIcons = commentContainer.querySelectorAll('.oprosnik-comment-hint-icon');
+    oldIcons.forEach(icon => {
+      if (icon.parentElement) {
+        icon.parentElement.remove();
+      }
+    });
   }
 }
 
 // --- ЗАПУСК ЛОГИКИ ---
-
 
 // Ждем загрузки DOM
 if (document.readyState === 'loading') {
@@ -402,11 +414,14 @@ if (document.readyState === 'loading') {
   initializeAll();
 }
 
-function initializeAll() {
-  // 1. Инициализируем стили
+async function initializeAll() {
+  // 1. Загружаем конфигурацию подсказок
+  await loadHintsConfig();
+  
+  // 2. Инициализируем стили
   initializeStyles();
   
-  // 2. Скрываем ненужный элемент формы
+  // 3. Скрываем ненужный элемент формы
   hideCallDurationElement();
   
   removeSpecificOptions({ 'type_group': CONFIG.OPTIONS_TO_REMOVE.type_group });
@@ -415,5 +430,4 @@ function initializeAll() {
   setInterval(() => {
     removeSpecificOptions({ 'type_id': CONFIG.OPTIONS_TO_REMOVE.type_id });
   }, CONFIG.INTERVALS.OPTIONS_CLEANUP);
-
 }
