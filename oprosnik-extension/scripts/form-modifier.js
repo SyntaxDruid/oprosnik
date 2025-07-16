@@ -155,7 +155,7 @@ function generateTooltipStyles() {
       
       /* Иконка информации */
       .oprosnik-comment-hint strong::before {
-        content: 'ℹ';
+        content: 'i';
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -165,7 +165,7 @@ function generateTooltipStyles() {
         color: white;
         border-radius: 50%;
         font-size: 12px;
-        font-weight: normal;
+        font-weight: bold;
         margin-right: 6px;
       }
       
