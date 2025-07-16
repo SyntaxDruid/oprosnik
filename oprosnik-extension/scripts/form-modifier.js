@@ -76,29 +76,6 @@ async function loadHintsConfig() {
 function generateTooltipStyles() {
   return `
     <style>
-      /* Анимации */
-      @keyframes slideIn {
-        from {
-          opacity: 0;
-          transform: translateX(-10px);
-        }
-        to {
-          opacity: 1;
-          transform: translateX(0);
-        }
-      }
-      
-      @keyframes fadeIn {
-        from {
-          opacity: 0;
-          transform: translateY(5px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-      
       /* Подсказка рядом с выпадающим списком */
       .oprosnik-hint-container {
         position: absolute;
@@ -106,7 +83,6 @@ function generateTooltipStyles() {
         top: 50%;
         transform: translateY(-50%);
         z-index: 100;
-        animation: slideIn 0.3s ease-out;
       }
       
       .oprosnik-hint-display {
@@ -118,7 +94,7 @@ function generateTooltipStyles() {
         color: #0d47a1;
         line-height: 1.5;
         box-shadow: 0 3px 8px rgba(25, 118, 210, 0.15);
-        max-width: 350px;
+        width: 300px;
         white-space: normal;
         position: relative;
         font-weight: 500;
@@ -163,14 +139,8 @@ function generateTooltipStyles() {
         display: block;
         position: relative;
         box-shadow: 0 4px 12px rgba(25, 118, 210, 0.12);
-        animation: fadeIn 0.3s ease-out;
-        transition: all 0.2s ease;
       }
       
-      .oprosnik-comment-hint:hover {
-        box-shadow: 0 6px 16px rgba(25, 118, 210, 0.18);
-        transform: translateY(-1px);
-      }
       
       .oprosnik-comment-hint strong {
         font-weight: 600;
@@ -206,7 +176,7 @@ function generateTooltipStyles() {
         }
         
         .oprosnik-hint-display {
-          max-width: 100%;
+          width: 100%;
         }
         
         .oprosnik-hint-display::before,
@@ -215,17 +185,6 @@ function generateTooltipStyles() {
         }
       }
       
-      /* Плавная анимация при изменении подсказок */
-      .oprosnik-hint-container.fade-out {
-        animation: fadeOut 0.2s ease-out forwards;
-      }
-      
-      @keyframes fadeOut {
-        to {
-          opacity: 0;
-          transform: translateX(-5px);
-        }
-      }
     </style>
   `;
 }
@@ -335,17 +294,13 @@ function addTypeIdHint() {
     const existingHint = typeIdContainer.querySelector('.oprosnik-hint-container');
     
     if (existingHint) {
-      // Добавляем класс для анимации исчезновения
-      existingHint.classList.add('fade-out');
-      setTimeout(() => existingHint.remove(), 200);
+      existingHint.remove();
     }
     
     // Добавляем новую подсказку, если есть данные
     if (hintData && selectedValue !== '0') {
-      setTimeout(() => {
-        const hintElement = createHintElement(hintData.hint1);
-        typeIdContainer.appendChild(hintElement);
-      }, existingHint ? 250 : 0);
+      const hintElement = createHintElement(hintData.hint1);
+      typeIdContainer.appendChild(hintElement);
       
       // Обновляем подсказки в поле комментария
       updateCommentHints(hintData);
@@ -365,14 +320,11 @@ function updateCommentHints(hintData) {
   const commentTextarea = document.getElementById('comment_');
   if (!commentTextarea) return;
   
-  // Удаляем старые подсказки с анимацией
+  // Удаляем старые подсказки
   removeAllCommentHints();
   
   if (hintData && hintData.hint2) {
-    // Добавляем новую подсказку с небольшой задержкой для анимации
-    setTimeout(() => {
-      addCommentHint('oprosnik-comment-hint-1', hintData.hint2, 'Рекомендации:', '8px');
-    }, 100);
+    addCommentHint('oprosnik-comment-hint-1', hintData.hint2, 'Рекомендации:', '8px');
   }
 }
 
@@ -391,12 +343,15 @@ function addCommentHint(id, hintText, label, marginTop) {
   const textareaContainer = commentTextarea.closest('.row');
   if (!textareaContainer) return;
   
+  // Получаем ширину поля комментария
+  const textareaWidth = commentTextarea.offsetWidth;
+  
   // Создаем элемент подсказки
   const hintElement = document.createElement('div');
   hintElement.id = id;
   hintElement.className = 'oprosnik-comment-hint';
   hintElement.style.marginTop = marginTop;
-  hintElement.style.width = '100%';
+  hintElement.style.width = textareaWidth + 'px';
   
   hintElement.innerHTML = `<strong>${label}</strong> ${hintText}`;
   
@@ -409,11 +364,7 @@ function addCommentHint(id, hintText, label, marginTop) {
  */
 function removeAllCommentHints() {
   const hints = document.querySelectorAll('.oprosnik-comment-hint');
-  hints.forEach(hint => {
-    hint.style.opacity = '0';
-    hint.style.transform = 'translateY(-5px)';
-    setTimeout(() => hint.remove(), 200);
-  });
+  hints.forEach(hint => hint.remove());
 }
 
 // ===========================
