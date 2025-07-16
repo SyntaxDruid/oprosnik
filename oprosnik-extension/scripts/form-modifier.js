@@ -53,9 +53,11 @@ function generateTooltipStyles() {
   return `
   <style>
     .oprosnik-hint-container {
-      margin-left: 10px;
-      margin-top: 8px;
-      display: block;
+      position: absolute;
+      left: 100%;
+      top: 0;
+      margin-left: 15px;
+      z-index: 100;
     }
     
     .oprosnik-hint-display {
@@ -67,7 +69,8 @@ function generateTooltipStyles() {
       color: #0d47a1;
       line-height: 1.4;
       box-shadow: 0 2px 4px rgba(25,118,210,0.1);
-      max-width: 400px;
+      max-width: 350px;
+      white-space: normal;
     }
     
     .oprosnik-comment-hint {
@@ -194,6 +197,8 @@ function addTypeIdHint() {
     // Добавляем новую подсказку, если есть
     if (hintData && selectedValue != 0) {
       const hintElement = createHintElement(hintData.hint1);
+      // Делаем контейнер относительно позиционированным
+      typeIdContainer.style.position = 'relative';
       typeIdContainer.appendChild(hintElement);
       
       // Также обновляем подсказки в поле комментария
@@ -218,12 +223,9 @@ function updateCommentHints(hintData) {
   // Удаляем старые подсказки
   removeAllCommentHints();
   
-  if (hintData && hintData.hint1 && hintData.hint2) {
-    // Первая подсказка
-    addCommentHint('oprosnik-comment-hint-1', hintData.hint1, 'Основная информация:', '8px');
-    
-    // Вторая подсказка
-    addCommentHint('oprosnik-comment-hint-2', hintData.hint2, 'Дополнительные детали:', '16px');
+  if (hintData && hintData.hint2) {
+    // Одна подсказка снизу
+    addCommentHint('oprosnik-comment-hint-1', hintData.hint2, 'Рекомендации:', '8px');
   }
 }
 
@@ -234,17 +236,24 @@ function addCommentHint(id, hintText, label, marginTop) {
   const commentTextarea = document.getElementById('comment_');
   if (!commentTextarea) return;
   
-  const commentContainer = commentTextarea.closest('.row');
-  if (!commentContainer) return;
+  // Находим родительский контейнер textarea
+  const textareaContainer = commentTextarea.closest('.input-group');
+  if (!textareaContainer) return;
+  
+  // Находим общий контейнер для всех элементов комментария
+  const parentContainer = textareaContainer.parentNode;
+  if (!parentContainer) return;
   
   const hintElement = document.createElement('div');
   hintElement.id = id;
   hintElement.className = 'oprosnik-comment-hint';
   hintElement.style.marginTop = marginTop;
+  hintElement.style.width = '100%';
   
   hintElement.innerHTML = `<strong>${label}</strong> ${hintText}`;
   
-  commentContainer.appendChild(hintElement);
+  // Добавляем после контейнера с textarea
+  parentContainer.insertBefore(hintElement, textareaContainer.nextSibling);
 }
 
 /**
@@ -256,17 +265,6 @@ function removeAllCommentHints() {
   
   if (hint1) hint1.remove();
   if (hint2) hint2.remove();
-  
-  // Удаляем старые иконки подсказок
-  const commentContainer = document.getElementById('comment_')?.closest('.row');
-  if (commentContainer) {
-    const oldIcons = commentContainer.querySelectorAll('.oprosnik-comment-hint-icon');
-    oldIcons.forEach(icon => {
-      if (icon.parentElement) {
-        icon.parentElement.remove();
-      }
-    });
-  }
 }
 
 // --- ЗАПУСК ЛОГИКИ ---
