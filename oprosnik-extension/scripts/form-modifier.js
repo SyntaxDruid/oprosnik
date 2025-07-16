@@ -58,10 +58,18 @@ const CONFIG = {
  */
 async function loadHintsConfig() {
   try {
-    const response = await fetch(chrome.runtime.getURL('hints-config.json'));
+    const response = await fetch(chrome.runtime.getURL('tips.json'));
     if (response.ok) {
-      hintsConfig = await response.json();
-      console.log('✅ Конфигурация подсказок загружена из JSON');
+      const tipsData = await response.json();
+      // Конвертируем массив tips в объект подсказок
+      hintsConfig.hints.type_id = {};
+      tipsData.forEach(tip => {
+        hintsConfig.hints.type_id[tip.id] = {
+          hint1: tip.hints1,
+          hint2: tip.hints2
+        };
+      });
+      console.log('✅ Конфигурация подсказок загружена из tips.json');
     } else {
       console.warn('⚠️ Не удалось загрузить конфигурацию подсказок, используется встроенная');
     }

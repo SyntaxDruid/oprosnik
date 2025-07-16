@@ -51,7 +51,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["config.json", "hints-config.json"],
+      "resources": ["config.json", "tips.json"],
       "matches": ["<all_urls>"]
     }
   ]
