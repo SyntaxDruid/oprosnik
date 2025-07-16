@@ -324,7 +324,7 @@ function updateCommentHints(hintData) {
   removeAllCommentHints();
   
   if (hintData && hintData.hint2) {
-    addCommentHint('oprosnik-comment-hint-1', hintData.hint2, 'Рекомендации:', '8px');
+    addCommentHint('oprosnik-comment-hint-1', hintData.hint2, 'Рекомендации:');
   }
 }
 
@@ -335,13 +335,17 @@ function updateCommentHints(hintData) {
  * @param {string} label - Заголовок подсказки
  * @param {string} marginTop - Отступ сверху
  */
-function addCommentHint(id, hintText, label, marginTop) {
+function addCommentHint(id, hintText, label) {
   const commentTextarea = document.getElementById('comment_');
   if (!commentTextarea) return;
   
-  // Находим родительский контейнер textarea
-  const textareaContainer = commentTextarea.closest('.row');
-  if (!textareaContainer) return;
+  // Находим контейнер с textarea
+  const textareaRow = commentTextarea.closest('.row');
+  if (!textareaRow) return;
+  
+  // Находим общий контейнер для всей секции комментария
+  const commentSection = textareaRow.parentNode;
+  if (!commentSection) return;
   
   // Получаем ширину поля комментария
   const textareaWidth = commentTextarea.offsetWidth;
@@ -350,13 +354,14 @@ function addCommentHint(id, hintText, label, marginTop) {
   const hintElement = document.createElement('div');
   hintElement.id = id;
   hintElement.className = 'oprosnik-comment-hint';
-  hintElement.style.marginTop = marginTop;
+  hintElement.style.marginTop = '12px';
   hintElement.style.width = textareaWidth + 'px';
+  hintElement.style.clear = 'both';
   
   hintElement.innerHTML = `<strong>${label}</strong> ${hintText}`;
   
-  // Добавляем после textarea
-  textareaContainer.parentNode.insertBefore(hintElement, textareaContainer.nextSibling);
+  // Добавляем в конец секции комментария
+  commentSection.appendChild(hintElement);
 }
 
 /**
