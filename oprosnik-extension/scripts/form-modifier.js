@@ -53,68 +53,21 @@ function generateTooltipStyles() {
   return `
   <style>
     .oprosnik-hint-container {
-      position: relative;
-      display: inline-block;
       margin-left: 10px;
-      vertical-align: top;
+      margin-top: 8px;
+      display: block;
     }
     
-    .oprosnik-hint-icon {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: ${config.hint_icon.size};
-      height: ${config.hint_icon.size};
-      background-color: ${config.hint_icon.background_color};
-      color: white;
-      border-radius: 50%;
-      cursor: help;
-      font-size: 12px;
-      font-weight: bold;
-      transition: all 0.3s ease;
-      border: none;
-      outline: none;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    
-    .oprosnik-hint-icon:hover {
-      background-color: ${config.hint_icon.hover_color};
-      transform: scale(1.1);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    }
-    
-    .oprosnik-hint-tooltip {
-      position: absolute;
-      left: 30px;
-      top: 50%;
-      transform: translateY(-50%);
-      background-color: ${config.tooltip_background};
-      color: white;
-      padding: 12px 16px;
-      border-radius: 8px;
+    .oprosnik-hint-display {
+      background-color: #e8f4fd;
+      border: 1px solid #1976d2;
+      border-radius: 6px;
+      padding: 8px 12px;
       font-size: 13px;
+      color: #0d47a1;
       line-height: 1.4;
-      width: ${config.tooltip_width};
-      z-index: 1000;
-      opacity: 0;
-      pointer-events: none;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-    }
-    
-    .oprosnik-hint-tooltip::before {
-      content: '';
-      position: absolute;
-      left: -8px;
-      top: 50%;
-      transform: translateY(-50%);
-      border: 8px solid transparent;
-      border-right-color: ${config.tooltip_background};
-    }
-    
-    .oprosnik-hint-container:hover .oprosnik-hint-tooltip {
-      opacity: 1;
-      transform: translateY(-50%) translateX(5px);
+      box-shadow: 0 2px 4px rgba(25,118,210,0.1);
+      max-width: 400px;
     }
     
     .oprosnik-comment-hint {
@@ -125,86 +78,17 @@ function generateTooltipStyles() {
       margin-top: 8px;
       font-size: 13px;
       color: #0d47a1;
-      display: none;
+      display: block;
       position: relative;
       box-shadow: 0 2px 8px rgba(25,118,210,0.1);
     }
     
-    .oprosnik-comment-hint::before {
-      content: '';
-      position: absolute;
-      left: 16px;
-      top: -8px;
-      border: 8px solid transparent;
-      border-bottom-color: #1976d2;
-    }
     
     .oprosnik-comment-hint strong {
       font-weight: 600;
       color: #1976d2;
     }
     
-    .oprosnik-comment-hint-icon {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: ${config.comment_hint_icon.size};
-      height: ${config.comment_hint_icon.size};
-      background-color: ${config.comment_hint_icon.background_color};
-      color: white;
-      border-radius: 50%;
-      cursor: help;
-      font-size: 12px;
-      font-weight: bold;
-      transition: all 0.3s ease;
-      border: none;
-      outline: none;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      margin-right: 10px;
-      margin-top: 8px;
-      position: relative;
-    }
-    
-    .oprosnik-comment-hint-icon:hover {
-      background-color: ${config.comment_hint_icon.hover_color};
-      transform: scale(1.1);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    }
-    
-    .oprosnik-comment-hint-tooltip {
-      position: absolute;
-      left: 30px;
-      top: 50%;
-      transform: translateY(-50%);
-      background-color: ${config.tooltip_background};
-      color: white;
-      padding: 12px 16px;
-      border-radius: 8px;
-      font-size: 13px;
-      line-height: 1.4;
-      width: ${config.tooltip_width};
-      z-index: 1000;
-      opacity: 0;
-      pointer-events: none;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-      white-space: nowrap;
-    }
-    
-    .oprosnik-comment-hint-tooltip::before {
-      content: '';
-      position: absolute;
-      left: -8px;
-      top: 50%;
-      transform: translateY(-50%);
-      border: 8px solid transparent;
-      border-right-color: ${config.tooltip_background};
-    }
-    
-    .oprosnik-comment-hint-icon:hover .oprosnik-comment-hint-tooltip {
-      opacity: 1;
-      transform: translateY(-50%) translateX(5px);
-    }
   </style>
   `;
 }
@@ -275,8 +159,7 @@ function createHintElement(hint) {
   const container = document.createElement('div');
   container.className = 'oprosnik-hint-container';
   container.innerHTML = `
-    <div class="oprosnik-hint-icon">?</div>
-    <div class="oprosnik-hint-tooltip">${hint}</div>
+    <div class="oprosnik-hint-display">${hint}</div>
   `;
   return container;
 }
@@ -311,7 +194,7 @@ function addTypeIdHint() {
     // Добавляем новую подсказку, если есть
     if (hintData && selectedValue != 0) {
       const hintElement = createHintElement(hintData.hint1);
-      typeIdSelect.parentNode.appendChild(hintElement);
+      typeIdContainer.appendChild(hintElement);
       
       // Также обновляем подсказки в поле комментария
       updateCommentHints(hintData);
@@ -321,20 +204,6 @@ function addTypeIdHint() {
   });
 }
 
-/**
- * Создает элемент подсказки для комментариев
- */
-function createCommentHintIcon(hint) {
-  const container = document.createElement('div');
-  container.className = 'oprosnik-hint-container';
-  container.innerHTML = `
-    <div class="oprosnik-comment-hint-icon">
-      ?
-      <div class="oprosnik-comment-hint-tooltip">${hint}</div>
-    </div>
-  `;
-  return container;
-}
 
 /**
  * Обновляет подсказки под полем комментария
@@ -375,12 +244,7 @@ function addCommentHint(id, hintText, label, marginTop) {
   
   hintElement.innerHTML = `<strong>${label}</strong> ${hintText}`;
   
-  // Добавляем иконку подсказки
-  const hintIcon = createCommentHintIcon(hintText);
-  hintElement.appendChild(hintIcon);
-  
   commentContainer.appendChild(hintElement);
-  hintElement.style.display = 'block';
 }
 
 /**
