@@ -74,7 +74,6 @@ async function loadHintsConfig() {
  * Генерирует стили для подсказок на основе конфигурации
  */
 function generateTooltipStyles() {
-  const config = hintsConfig.ui.tooltip_styles;
   return `
     <style>
       /* Анимации */
