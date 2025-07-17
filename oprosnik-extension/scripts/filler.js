@@ -331,6 +331,12 @@ function createPasteButton() {
         if (needsContainer) {
             buttonContainer = document.createElement('div');
             buttonContainer.className = 'oprosnik-buttons-container';
+            buttonContainer.style.cssText = `
+                display: flex;
+                gap: 10px;
+                align-items: center;
+                flex-wrap: wrap;
+            `;
         }
         
         // Создаем нашу новую кнопку
@@ -338,8 +344,13 @@ function createPasteButton() {
         pasteButton.innerText = CONFIG.ui.button.text;
         pasteButton.type = 'button';
         pasteButton.className = CONFIG.ui.button.className;
-        pasteButton.style.height = CONFIG.ui.button.height;
-        pasteButton.style.fontSize = CONFIG.ui.button.fontSize + ' !important';
+        pasteButton.style.cssText = `
+            height: 44px !important;
+            font-size: 16px !important;
+            padding: 8px 16px !important;
+            min-width: 200px !important;
+            white-space: nowrap !important;
+        `;
         
         // Добавляем data-атрибуты для диагностики
         pasteButton.setAttribute('data-extension-id', chrome.runtime?.id || 'unknown');
@@ -352,10 +363,20 @@ function createPasteButton() {
         // Размещаем кнопку
         try {
             if (needsContainer) {
-                // Если нужен контейнер, создаем его и размещаем после целевой кнопки
+                // Увеличиваем размер целевой кнопки
+                targetButton.style.cssText += `
+                    height: 44px !important;
+                    font-size: 16px !important;
+                    padding: 8px 16px !important;
+                    min-width: 120px !important;
+                `;
+                
+                // Перемещаем целевую кнопку в новый контейнер
+                const parentElement = targetButton.parentElement;
+                buttonContainer.appendChild(targetButton);
                 buttonContainer.appendChild(pasteButton);
-                targetButton.insertAdjacentElement('afterend', buttonContainer);
-                console.log('✅ Кнопка размещена в новом контейнере после целевой кнопки');
+                parentElement.appendChild(buttonContainer);
+                console.log('✅ Кнопки размещены в новом flex-контейнере');
             } else {
                 // Если контейнер уже есть, просто добавляем кнопку
                 buttonContainer.appendChild(pasteButton);
