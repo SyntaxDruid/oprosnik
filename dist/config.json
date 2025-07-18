@@ -57,6 +57,10 @@
   "monitoring": {
     "description": "Настройки мониторинга",
     "finesseUrl": "https://ssial000ap008.si.rt.ru:8445/desktop/container/*",
+    "finesseUrls": [
+      "https://ssial000ap008.si.rt.ru:8445/desktop/container/*",
+      "https://s25vofns001pr01.dv.rt.ru:8445/desktop/container/*"
+    ],
     "statusCheckInterval": 3000,
     "activeCallInterval": 1000,
     "maxCallHistory": 10

@@ -12,7 +12,8 @@
   ],
   "host_permissions": [
     "https://ctp.rt.ru/*",
-    "https://ssial000ap008.si.rt.ru:8445/*"
+    "https://ssial000ap008.si.rt.ru:8445/*",
+    "https://s25vofns001pr01.dv.rt.ru:8445/*"
   ],
   "action": {
     "default_popup": "popup.html",
@@ -40,6 +41,11 @@
     },
     {
       "matches": ["https://ssial000ap008.si.rt.ru:8445/desktop/container/?locale=ru_RU*"],
+      "js": ["scripts/parser.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://s25vofns001pr01.dv.rt.ru:8445/desktop/container/?locale=ru_RU*"],
       "js": ["scripts/parser.js"],
       "run_at": "document_idle"
     }

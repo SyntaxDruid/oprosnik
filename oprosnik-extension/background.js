@@ -119,9 +119,22 @@ class FinesseActiveMonitor {
     }
     
     async findFinesseTab() {
-        const tabs = await chrome.tabs.query({
-            url: CONFIG.monitoring.finesseUrl
-        });
+        // Ищем вкладки по всем URL из конфигурации
+        let tabs = [];
+        
+        if (CONFIG.monitoring.finesseUrls) {
+            // Новый формат с массивом URL
+            for (const url of CONFIG.monitoring.finesseUrls) {
+                const urlTabs = await chrome.tabs.query({ url });
+                tabs.push(...urlTabs);
+            }
+        } else {
+            // Fallback для старого формата
+            const urlTabs = await chrome.tabs.query({
+                url: CONFIG.monitoring.finesseUrl
+            });
+            tabs.push(...urlTabs);
+        }
         
         if (tabs.length > 0) {
             this.finesseTabId = tabs[0].id;
