@@ -373,8 +373,8 @@ function createPasteButton() {
                 
                 // Перемещаем целевую кнопку в новый контейнер
                 const parentElement = targetButton.parentElement;
-                buttonContainer.appendChild(targetButton);
                 buttonContainer.appendChild(pasteButton);
+                buttonContainer.appendChild(targetButton);
                 parentElement.appendChild(buttonContainer);
                 console.log('✅ Кнопки размещены в новом flex-контейнере');
             } else {
