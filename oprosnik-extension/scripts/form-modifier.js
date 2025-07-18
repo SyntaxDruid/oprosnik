@@ -185,9 +185,87 @@ function generateTooltipStyles() {
         white-space: nowrap !important;
       }
       
-      /* Увеличиваем высоту модального окна селекта */
-      select#type_id.custom-select {
+      /* Агрессивные стили для увеличения высоты dropdown */
+      
+      /* Bootstrap Select dropdown - все возможные варианты */
+      .bootstrap-select .dropdown-menu,
+      .bootstrap-select .dropdown-menu.show,
+      .bootstrap-select .dropdown-menu.inner,
+      .bootstrap-select .dropdown-menu .inner {
         max-height: 500px !important;
+        height: auto !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+      }
+      
+      /* Стандартный Bootstrap dropdown для select */
+      .dropdown-menu,
+      .dropdown-menu.show,
+      select + .dropdown-menu,
+      #type_id + .dropdown-menu {
+        max-height: 500px !important;
+        height: auto !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+      }
+      
+      /* Попытка через CSS переменные для Bootstrap 5 */
+      select#type_id.custom-select {
+        --bs-dropdown-max-height: 500px !important;
+      }
+      
+      /* Более агрессивные стили для всех dropdown */
+      [class*="dropdown"],
+      [class*="select"],
+      [class*="menu"] {
+        max-height: 500px !important;
+      }
+      
+      /* Дополнительные стили для кастомных select компонентов */
+      .select2-results,
+      .select2-results__options,
+      .select2-dropdown,
+      .select2-dropdown .select2-results {
+        max-height: 500px !important;
+        overflow-y: auto !important;
+      }
+      
+      /* Для других популярных select библиотек */
+      .chosen-results,
+      .chosen-drop,
+      .selectize-dropdown,
+      .selectize-dropdown-content {
+        max-height: 500px !important;
+        overflow-y: auto !important;
+      }
+      
+      /* Попытка перехватить любые элементы с определенными атрибутами */
+      [role="listbox"],
+      [role="menu"],
+      [role="combobox"] + * {
+        max-height: 500px !important;
+        overflow-y: auto !important;
+      }
+      
+      /* Кастомный класс для принудительного изменения высоты */
+      .oprosnik-dropdown-enlarged {
+        max-height: 500px !important;
+        overflow-y: auto !important;
+        height: auto !important;
+        min-height: 100px !important;
+      }
+      
+      /* Максимально агрессивный селектор для любых dropdown */
+      .oprosnik-dropdown-enlarged,
+      .oprosnik-dropdown-enlarged.dropdown-menu,
+      .oprosnik-dropdown-enlarged.bootstrap-select,
+      .oprosnik-dropdown-enlarged[class*="dropdown"],
+      .oprosnik-dropdown-enlarged[class*="select"],
+      .oprosnik-dropdown-enlarged[class*="menu"] {
+        max-height: 500px !important;
+        overflow-y: auto !important;
+        height: auto !important;
+        min-height: 100px !important;
       }
       
       /* Адаптивность для маленьких экранов */
@@ -291,6 +369,117 @@ function createHintElement(hint) {
 }
 
 
+
+/**
+ * Настраивает высоту dropdown списка для селекта type_id
+ */
+function configureSelectDropdown() {
+  const typeIdSelect = document.getElementById('type_id');
+  if (typeIdSelect) {
+    console.log('🔧 Найден селект type_id:', typeIdSelect);
+    console.log('🔧 Классы селекта:', typeIdSelect.className);
+    console.log('🔧 Родительские элементы:', typeIdSelect.parentElement);
+    
+    // Проверяем все CSS библиотеки select на странице
+    const bootstrapSelects = document.querySelectorAll('.bootstrap-select');
+    const select2Elements = document.querySelectorAll('.select2-container');
+    const chosenElements = document.querySelectorAll('.chosen-container');
+    
+    console.log('🔧 Bootstrap Select найдено:', bootstrapSelects.length);
+    console.log('🔧 Select2 найдено:', select2Elements.length);
+    console.log('🔧 Chosen найдено:', chosenElements.length);
+    
+    // Если это обернуто в Bootstrap Select
+    if (typeIdSelect.closest('.bootstrap-select')) {
+      console.log('🔧 Обнаружен Bootstrap Select');
+      // Пробуем инициализировать с нужными параметрами
+      if (typeof $ !== 'undefined' && $.fn.selectpicker) {
+        $(typeIdSelect).selectpicker({
+          size: 10,
+          liveSearch: true,
+          dropupAuto: false,
+          windowPadding: 10
+        });
+        console.log('🔧 Bootstrap Select переинициализирован');
+      }
+    }
+    
+    // Только стили для реальных кастомных библиотек select
+    const style = document.createElement('style');
+    style.id = 'oprosnik-dropdown-height-fix';
+    style.textContent = `
+      /* Только для Bootstrap Select */
+      .bootstrap-select .dropdown-menu {
+        max-height: 400px !important;
+        overflow-y: auto !important;
+      }
+      
+      /* Только для Select2 */
+      .select2-results {
+        max-height: 400px !important;
+        overflow-y: auto !important;
+      }
+      
+      /* Только для Chosen */
+      .chosen-results {
+        max-height: 400px !important;
+        overflow-y: auto !important;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    // Пробуем подход с multiple для показа всех опций
+    console.log('🔧 Пробуем установить multiple для показа всех опций');
+    typeIdSelect.setAttribute('multiple', 'multiple');
+    typeIdSelect.setAttribute('size', '10');
+    
+    // Добавляем стили для select с multiple
+    const multipleStyle = document.createElement('style');
+    multipleStyle.textContent = `
+      select#type_id[multiple] {
+        height: auto !important;
+        min-height: 300px !important;
+        max-height: 500px !important;
+        overflow-y: auto !important;
+        width: 100% !important;
+        font-size: 14px !important;
+        border: 1px solid #ced4da !important;
+        border-radius: 0.375rem !important;
+        padding: 4px !important;
+      }
+      
+      select#type_id[multiple] option {
+        padding: 6px 8px !important;
+        font-size: 14px !important;
+        line-height: 1.2 !important;
+      }
+      
+      select#type_id[multiple] option:hover {
+        background-color: #007bff !important;
+        color: white !important;
+      }
+      
+      select#type_id[multiple] option:selected {
+        background-color: #007bff !important;
+        color: white !important;
+      }
+    `;
+    document.head.appendChild(multipleStyle);
+    
+    // Добавляем обработчик для эмуляции single-select поведения
+    typeIdSelect.addEventListener('change', function() {
+      const selectedOptions = this.selectedOptions;
+      if (selectedOptions.length > 1) {
+        // Если выбрано больше одного элемента, оставляем только последний
+        for (let i = 0; i < selectedOptions.length - 1; i++) {
+          selectedOptions[i].selected = false;
+        }
+      }
+    });
+    
+    console.log('✅ Установлен multiple с эмуляцией single-select');
+  }
+}
 
 /**
  * Добавляет динамические подсказки для поля type_id
@@ -420,10 +609,13 @@ async function initializeAll() {
     // 4. Удаляем ненужные опции из type_group
     removeSpecificOptions({ 'type_group': CONFIG.OPTIONS_TO_REMOVE.type_group });
     
-    // 5. Добавляем обработчик подсказок с задержкой
+    // 5. Настраиваем размер dropdown для селекта
+    setTimeout(configureSelectDropdown, CONFIG.INTERVALS.INITIAL_DELAY);
+    
+    // 6. Добавляем обработчик подсказок с задержкой
     setTimeout(addTypeIdHint, CONFIG.INTERVALS.INITIAL_DELAY);
     
-    // 6. Устанавливаем интервал для периодической очистки опций type_id
+    // 7. Устанавливаем интервал для периодической очистки опций type_id
     setInterval(() => {
       removeSpecificOptions({ 'type_id': CONFIG.OPTIONS_TO_REMOVE.type_id });
     }, CONFIG.INTERVALS.OPTIONS_CLEANUP);
