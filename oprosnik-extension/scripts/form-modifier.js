@@ -195,7 +195,7 @@ function generateTooltipStyles() {
       select#type_id:focus,
       select#type_id[size],
       select#type_id[multiple] {
-        max-height: 400px !important;
+        max-height: 500px !important;
         overflow-y: auto !important;
       }
       
@@ -320,7 +320,7 @@ function tryFixDropdownHeight() {
     
     // Добавляем обработчик фокуса
     typeIdSelect.addEventListener('focus', function() {
-      this.style.maxHeight = '400px';
+      this.style.maxHeight = '500px';
       this.style.overflowY = 'auto';
     });
     

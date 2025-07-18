@@ -119,7 +119,7 @@ function showCallHistoryModal(callHistory) {
         border-radius: 8px;
         padding: 20px;
         max-width: 600px;
-        max-height: 90vh;
+        max-height: 500px;
         overflow-y: auto;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     `;
