@@ -178,34 +178,25 @@ function generateTooltipStyles() {
         margin-right: 6px;
       }
       
-      /* Убираем ограничения высоты для dropdown "Проблема" */
-      #type_id {
-        height: auto !important;
+      /* Стили для увеличения высоты выпадающего списка */
+      select#type_id {
+        /* Убираем ограничения высоты для самого элемента select */
         max-height: none !important;
-        overflow: visible !important;
-        size: 20 !important;
       }
       
-      /* Убираем ограничения для всех select элементов */
-      select[id*="type"] {
-        height: auto !important;
-        max-height: none !important;
-        overflow: visible !important;
-        size: 20 !important;
-      }
-      
-      /* Альтернативные правила для выпадающих списков */
+      /* Стили для опций выпадающего списка */
       select#type_id option {
         height: auto !important;
-        max-height: none !important;
+        padding: 4px 8px !important;
+        white-space: nowrap !important;
       }
       
-      /* Убираем ограничения на уровне контейнера */
-      .input-group select,
-      .form-control select {
-        height: auto !important;
-        max-height: none !important;
-        overflow: visible !important;
+      /* Попытка увеличить высоту выпадающего списка через CSS */
+      select#type_id:focus,
+      select#type_id[size],
+      select#type_id[multiple] {
+        max-height: 400px !important;
+        overflow-y: auto !important;
       }
       
       /* Адаптивность для маленьких экранов */
@@ -308,22 +299,32 @@ function createHintElement(hint) {
   return container;
 }
 
+
 /**
- * Убирает скролл у выпадающего списка "Проблема"
+ * Пытается увеличить высоту выпадающего списка
  */
-function removeDropdownScroll() {
+function tryFixDropdownHeight() {
   const typeIdSelect = document.getElementById('type_id');
   if (typeIdSelect) {
-    // Устанавливаем атрибут size для отображения всех опций
-    const optionsCount = typeIdSelect.querySelectorAll('option').length;
-    typeIdSelect.setAttribute('size', Math.min(optionsCount, 15)); // Максимум 15 опций видимых
+    // Добавляем обработчик клика для попытки увеличить высоту
+    typeIdSelect.addEventListener('click', function() {
+      // Временно добавляем стили для увеличения высоты
+      setTimeout(() => {
+        const dropdownOptions = document.querySelectorAll('#type_id option');
+        dropdownOptions.forEach(option => {
+          option.style.height = 'auto';
+          option.style.padding = '4px 8px';
+        });
+      }, 50);
+    });
     
-    // Дополнительные стили через JavaScript
-    typeIdSelect.style.height = 'auto';
-    typeIdSelect.style.maxHeight = 'none';
-    typeIdSelect.style.overflow = 'visible';
+    // Добавляем обработчик фокуса
+    typeIdSelect.addEventListener('focus', function() {
+      this.style.maxHeight = '400px';
+      this.style.overflowY = 'auto';
+    });
     
-    console.log('✅ Скролл убран из dropdown "Проблема"');
+    console.log('✅ Попытка исправить высоту выпадающего списка');
   }
 }
 
@@ -346,8 +347,8 @@ function addTypeIdHint() {
   // Делаем контейнер относительно позиционированным для абсолютных подсказок
   typeIdContainer.style.position = 'relative';
   
-  // Убираем скролл
-  removeDropdownScroll();
+  // Пытаемся исправить высоту выпадающего списка
+  tryFixDropdownHeight();
   
   // Добавляем обработчик изменения
   typeIdSelect.addEventListener('change', function() {
@@ -465,10 +466,6 @@ async function initializeAll() {
       removeSpecificOptions({ 'type_id': CONFIG.OPTIONS_TO_REMOVE.type_id });
     }, CONFIG.INTERVALS.OPTIONS_CLEANUP);
     
-    // 7. Периодически убираем скролл из dropdown (на случай динамических изменений)
-    setInterval(() => {
-      removeDropdownScroll();
-    }, CONFIG.INTERVALS.OPTIONS_CLEANUP);
     
     console.log('✅ Все модификации формы успешно применены!');
     
