@@ -183,10 +183,26 @@ function generateTooltipStyles() {
         height: auto !important;
         max-height: none !important;
         overflow: visible !important;
+        size: 20 !important;
       }
       
       /* Убираем ограничения для всех select элементов */
       select[id*="type"] {
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        size: 20 !important;
+      }
+      
+      /* Альтернативные правила для выпадающих списков */
+      select#type_id option {
+        height: auto !important;
+        max-height: none !important;
+      }
+      
+      /* Убираем ограничения на уровне контейнера */
+      .input-group select,
+      .form-control select {
         height: auto !important;
         max-height: none !important;
         overflow: visible !important;
@@ -293,6 +309,25 @@ function createHintElement(hint) {
 }
 
 /**
+ * Убирает скролл у выпадающего списка "Проблема"
+ */
+function removeDropdownScroll() {
+  const typeIdSelect = document.getElementById('type_id');
+  if (typeIdSelect) {
+    // Устанавливаем атрибут size для отображения всех опций
+    const optionsCount = typeIdSelect.querySelectorAll('option').length;
+    typeIdSelect.setAttribute('size', Math.min(optionsCount, 15)); // Максимум 15 опций видимых
+    
+    // Дополнительные стили через JavaScript
+    typeIdSelect.style.height = 'auto';
+    typeIdSelect.style.maxHeight = 'none';
+    typeIdSelect.style.overflow = 'visible';
+    
+    console.log('✅ Скролл убран из dropdown "Проблема"');
+  }
+}
+
+/**
  * Добавляет динамические подсказки для поля type_id
  */
 function addTypeIdHint() {
@@ -310,6 +345,9 @@ function addTypeIdHint() {
   
   // Делаем контейнер относительно позиционированным для абсолютных подсказок
   typeIdContainer.style.position = 'relative';
+  
+  // Убираем скролл
+  removeDropdownScroll();
   
   // Добавляем обработчик изменения
   typeIdSelect.addEventListener('change', function() {
@@ -425,6 +463,11 @@ async function initializeAll() {
     // 6. Устанавливаем интервал для периодической очистки опций type_id
     setInterval(() => {
       removeSpecificOptions({ 'type_id': CONFIG.OPTIONS_TO_REMOVE.type_id });
+    }, CONFIG.INTERVALS.OPTIONS_CLEANUP);
+    
+    // 7. Периодически убираем скролл из dropdown (на случай динамических изменений)
+    setInterval(() => {
+      removeDropdownScroll();
     }, CONFIG.INTERVALS.OPTIONS_CLEANUP);
     
     console.log('✅ Все модификации формы успешно применены!');
