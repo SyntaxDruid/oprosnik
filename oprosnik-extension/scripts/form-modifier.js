@@ -179,37 +179,35 @@ function generateTooltipStyles() {
       }
       
       /* Стили для увеличения высоты выпадающего списка */
-      select#type_id {
-        /* Убираем ограничения высоты для самого элемента select */
-        max-height: none !important;
-        size: 15 !important;
-        height: auto !important;
+      select#type_id.custom-select {
+        /* Увеличиваем только видимую высоту dropdown */
+        height: 50px !important;
+        padding: 10px 12px !important;
+        font-size: 16px !important;
+        line-height: 1.4 !important;
       }
       
       /* Стили для опций выпадающего списка */
       select#type_id option {
         height: auto !important;
-        padding: 6px 10px !important;
+        padding: 8px 12px !important;
         white-space: nowrap !important;
-        line-height: 1.3 !important;
+        line-height: 1.4 !important;
+        font-size: 14px !important;
       }
       
-      /* Попытка увеличить высоту выпадающего списка через CSS */
-      select#type_id:focus,
-      select#type_id[size],
-      select#type_id[multiple] {
-        max-height: 600px !important;
-        overflow-y: auto !important;
-        height: auto !important;
-        size: 15 !important;
-      }
-      
-      /* Дополнительные стили для принудительного увеличения */
+      /* Попытка увеличить высоту через специфические селекторы Bootstrap */
       .form-control#type_id,
       .custom-select#type_id {
-        max-height: 600px !important;
-        overflow-y: auto !important;
-        size: 15 !important;
+        min-height: 50px !important;
+        padding: 10px 12px !important;
+      }
+      
+      /* Дополнительные стили для браузерной совместимости */
+      select#type_id {
+        -webkit-appearance: menulist !important;
+        -moz-appearance: menulist !important;
+        appearance: menulist !important;
       }
       
       /* Адаптивность для маленьких экранов */
@@ -314,54 +312,21 @@ function createHintElement(hint) {
 
 
 /**
- * Пытается увеличить высоту выпадающего списка
+ * Улучшает стили выпадающего списка без изменения размера
  */
-function tryFixDropdownHeight() {
+function enhanceDropdownStyles() {
   const typeIdSelect = document.getElementById('type_id');
   if (typeIdSelect) {
-    // Устанавливаем размер сразу
-    typeIdSelect.setAttribute('size', '15');
-    typeIdSelect.style.maxHeight = '600px';
-    typeIdSelect.style.overflowY = 'auto';
-    typeIdSelect.style.height = 'auto';
-    
-    // Добавляем обработчик клика для попытки увеличить высоту
-    typeIdSelect.addEventListener('click', function() {
-      // Принудительно устанавливаем размер
-      this.setAttribute('size', '15');
-      this.style.maxHeight = '600px';
-      this.style.overflowY = 'auto';
-      this.style.height = 'auto';
-      
-      // Временно добавляем стили для увеличения высоты
-      setTimeout(() => {
-        const dropdownOptions = document.querySelectorAll('#type_id option');
-        dropdownOptions.forEach(option => {
-          option.style.height = 'auto';
-          option.style.padding = '6px 10px';
-          option.style.lineHeight = '1.3';
-        });
-      }, 50);
+    // Только улучшаем стили опций
+    const dropdownOptions = document.querySelectorAll('#type_id option');
+    dropdownOptions.forEach(option => {
+      option.style.height = 'auto';
+      option.style.padding = '8px 12px';
+      option.style.lineHeight = '1.4';
+      option.style.fontSize = '14px';
     });
     
-    // Добавляем обработчик фокуса
-    typeIdSelect.addEventListener('focus', function() {
-      this.setAttribute('size', '15');
-      this.style.maxHeight = '600px';
-      this.style.overflowY = 'auto';
-      this.style.height = 'auto';
-    });
-    
-    // Добавляем обработчик изменения размера окна
-    window.addEventListener('resize', function() {
-      if (typeIdSelect) {
-        typeIdSelect.setAttribute('size', '15');
-        typeIdSelect.style.maxHeight = '600px';
-        typeIdSelect.style.overflowY = 'auto';
-      }
-    });
-    
-    console.log('✅ Попытка исправить высоту выпадающего списка');
+    console.log('✅ Стили опций выпадающего списка улучшены');
   }
 }
 
@@ -384,8 +349,8 @@ function addTypeIdHint() {
   // Делаем контейнер относительно позиционированным для абсолютных подсказок
   typeIdContainer.style.position = 'relative';
   
-  // Пытаемся исправить высоту выпадающего списка
-  tryFixDropdownHeight();
+  // Улучшаем стили выпадающего списка
+  enhanceDropdownStyles();
   
   // Добавляем обработчик изменения
   typeIdSelect.addEventListener('change', function() {
@@ -476,39 +441,6 @@ function removeAllCommentHints() {
 // ГЛАВНАЯ ФУНКЦИЯ ИНИЦИАЛИЗАЦИИ
 // ===========================
 
-/**
- * Агрессивно обновляет высоту select элемента
- */
-function aggressiveDropdownHeightFix() {
-  const typeIdSelect = document.getElementById('type_id');
-  if (typeIdSelect) {
-    // Создаем MutationObserver для отслеживания изменений
-    const observer = new MutationObserver(() => {
-      typeIdSelect.setAttribute('size', '15');
-      typeIdSelect.style.maxHeight = '600px';
-      typeIdSelect.style.overflowY = 'auto';
-      typeIdSelect.style.height = 'auto';
-    });
-    
-    // Наблюдаем за изменениями атрибутов
-    observer.observe(typeIdSelect, { 
-      attributes: true, 
-      attributeFilter: ['size', 'style'] 
-    });
-    
-    // Принудительно устанавливаем размер каждую секунду
-    setInterval(() => {
-      if (typeIdSelect) {
-        typeIdSelect.setAttribute('size', '15');
-        typeIdSelect.style.maxHeight = '600px';
-        typeIdSelect.style.overflowY = 'auto';
-        typeIdSelect.style.height = 'auto';
-      }
-    }, 1000);
-    
-    console.log('✅ Агрессивное исправление высоты выпадающего списка активировано');
-  }
-}
 
 /**
  * Инициализирует все модификации формы
@@ -536,9 +468,6 @@ async function initializeAll() {
     setInterval(() => {
       removeSpecificOptions({ 'type_id': CONFIG.OPTIONS_TO_REMOVE.type_id });
     }, CONFIG.INTERVALS.OPTIONS_CLEANUP);
-    
-    // 7. Запускаем агрессивное исправление высоты
-    setTimeout(aggressiveDropdownHeightFix, CONFIG.INTERVALS.INITIAL_DELAY + 100);
     
     console.log('✅ Все модификации формы успешно применены!');
     
