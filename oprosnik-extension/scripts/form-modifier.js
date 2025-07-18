@@ -178,6 +178,20 @@ function generateTooltipStyles() {
         margin-right: 6px;
       }
       
+      /* Убираем ограничения высоты для dropdown "Проблема" */
+      #type_id {
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+      }
+      
+      /* Убираем ограничения для всех select элементов */
+      select[id*="type"] {
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+      }
+      
       /* Адаптивность для маленьких экранов */
       @media (max-width: 1200px) {
         .oprosnik-hint-container {
