@@ -32,7 +32,7 @@ async function loadConfig() {
                 targetButtons: {
                     strategies: [
                         { name: 'По ID', selector: '#create_inst' },
-                        { name: 'По классу и тексту', selector: 'button.btn-primary', text: 'Ответить' }
+                        { name: 'По классу и тексту', selector: 'button.btn-primary', text: 'Отправить' }
                     ]
                 }
             },
@@ -237,26 +237,26 @@ function createPasteButton() {
                 return null;
             },
             
-            // Стратегия 2: Поиск кнопки "Ответить" с классом btn-primary
+            // Стратегия 2: Поиск кнопки "Отправить" с классом btn-primary
             () => {
                 const buttons = document.querySelectorAll('button.btn-primary');
                 for (const btn of buttons) {
-                    if (btn.innerText && btn.innerText.trim() === 'Ответить') {
-                        console.log('✅ Найдена кнопка "Ответить" по классу btn-primary');
+                    if (btn.innerText && btn.innerText.trim() === 'Отправить') {
+                        console.log('✅ Найдена кнопка "Отправить" по классу btn-primary');
                         return { button: btn, container: btn.parentElement };
                     }
                 }
                 return null;
             },
             
-            // Стратегия 3: Общий поиск кнопок с текстом "Ответить"
+            // Стратегия 3: Общий поиск кнопок с текстом "Отправить"
             () => {
                 const selectors = ['button', 'input[type="submit"]', '.btn'];
                 for (const selector of selectors) {
                     try {
                         const elements = document.querySelectorAll(selector);
                         for (const el of elements) {
-                            if (el.innerText && el.innerText.includes('Ответить')) {
+                            if (el.innerText && el.innerText.includes('Отправить')) {
                                 console.log(`✅ Найдена кнопка по селектору: ${selector}`);
                                 return { button: el, container: el.parentElement };
                             }
@@ -300,7 +300,7 @@ function createPasteButton() {
             if (attempts < maxAttempts) {
                 setTimeout(tryCreateButton, 500);
             } else {
-                console.error('❌ Не удалось найти кнопку "Ответить" после', maxAttempts, 'попыток');
+                console.error('❌ Не удалось найти кнопку "Отправить" после', maxAttempts, 'попыток');
                 showDiagnosticInfo();
             }
             return;
@@ -693,7 +693,7 @@ window.recreateHelperButton = function() {
 // Добавляем глобальную функцию для отладки
 window.debugOprosnikHelper = function() {
     console.group('🐛 Debug Oprosnik Helper');
-    console.log('Кнопка "Ответить":', document.getElementById('create_inst'));
+    console.log('Кнопка "Отправить":', document.getElementById('create_inst'));
     console.log('Наша кнопка:', document.querySelector('.oprosnik-helper-btn'));
     console.log('Chrome API:', typeof chrome !== 'undefined' && chrome.runtime);
     console.log('Extension ID:', chrome.runtime?.id);

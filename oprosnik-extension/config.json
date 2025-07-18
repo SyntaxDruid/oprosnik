@@ -36,14 +36,14 @@
         {
           "name": "По классу и тексту",
           "selector": "button.btn-primary",
-          "text": "Ответить",
-          "description": "Поиск кнопки 'Ответить' с классом btn-primary"
+          "text": "Отправить",
+          "description": "Поиск кнопки 'Отправить' с классом btn-primary"
         },
         {
           "name": "Общий поиск",
           "selectors": ["button", "input[type=\"submit\"]", ".btn"],
-          "text": "Ответить",
-          "description": "Общий поиск кнопок с текстом 'Ответить'"
+          "text": "Отправить",
+          "description": "Общий поиск кнопок с текстом 'Отправить'"
         },
         {
           "name": "По структуре формы",
