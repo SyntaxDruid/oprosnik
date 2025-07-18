@@ -363,6 +363,12 @@ function createPasteButton() {
         // Размещаем кнопку
         try {
             if (needsContainer) {
+                // Переименовываем целевую кнопку на "Отправить"
+                if (targetButton.innerText && targetButton.innerText.includes('Ответить')) {
+                    targetButton.innerText = targetButton.innerText.replace('Ответить', 'Отправить');
+                    console.log('✅ Кнопка переименована на "Отправить"');
+                }
+                
                 // Увеличиваем размер целевой кнопки
                 targetButton.style.cssText += `
                     height: 44px !important;
@@ -378,6 +384,12 @@ function createPasteButton() {
                 parentElement.appendChild(buttonContainer);
                 console.log('✅ Кнопки размещены в новом flex-контейнере');
             } else {
+                // Переименовываем целевую кнопку на "Отправить"
+                if (targetButton.innerText && targetButton.innerText.includes('Ответить')) {
+                    targetButton.innerText = targetButton.innerText.replace('Ответить', 'Отправить');
+                    console.log('✅ Кнопка переименована на "Отправить"');
+                }
+                
                 // Если контейнер уже есть, просто добавляем кнопку
                 buttonContainer.appendChild(pasteButton);
                 console.log('✅ Кнопка добавлена в существующий контейнер');
