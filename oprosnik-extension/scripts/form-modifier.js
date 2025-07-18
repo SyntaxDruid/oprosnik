@@ -185,6 +185,11 @@ function generateTooltipStyles() {
         white-space: nowrap !important;
       }
       
+      /* Увеличиваем высоту модального окна селекта */
+      select#type_id.custom-select {
+        max-height: 500px !important;
+      }
+      
       /* Адаптивность для маленьких экранов */
       @media (max-width: 1200px) {
         .oprosnik-hint-container {
